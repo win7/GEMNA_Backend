@@ -1,0 +1,5 @@
+/GNN_Unsupervised/input
+/GNN_Unsupervised/output
+/GNN_Unsupervised/temp
+/GNN_Unsupervised/raw_data
+*.pyc
