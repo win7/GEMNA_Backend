@@ -1,8 +1,8 @@
 import os
 import sys
 
-print(sys.path)
-sys.path.append("/home/ealvarez/Project/MetaNet/GNN_Unsupervised/")
+dir = os.getcwd() + "/GNN_Unsupervised"
+sys.path.append(dir)
 
 import format_input as fi
 import preprocessing as pp
@@ -12,17 +12,6 @@ import change_detection as cd
 import processing_biocyc as pb
 
 import time
-
-# Preprocessing
-
-# Node-embeddings:
-# methods = ["dgi", "vgae"]
-# options = ["", "dyn", "str"]
-
-
-# 
-# os.system("python del.py 123 456")
-# os.system("jupyter nbconvert --execute --to notebook --inplace z.ipynb")
 
 """ exp = "exp102"
 method = "dgi" # vgae, dgi

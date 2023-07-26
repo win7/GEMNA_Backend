@@ -1,7 +1,4 @@
-# %% [markdown]
 # ### Imports
-
-# %%
 import os
 import sys
 
@@ -26,12 +23,6 @@ import os
 import pandas as pd
 import sys
 
-# %load_ext autotime
-
-# %% [markdown]
-# ### Parameters
-
-# %%
 import json
 
 def main(exp):
@@ -66,24 +57,14 @@ def main(exp):
         subgroups_id_op = subgroups_id
     print("Subgroups id op:", subgroups_id_op)
 
-
-
-    # %% [markdown]
     # ### Edge embeddings
-
-    # %%
     # get edges embeddings
 
     edge_embeddings_global(exp, method, groups_id, subgroups_id_op)
 
-    # %%
     df_edge_embeddings = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], subgroups_id_op[groups_id[0]][0]), index_col=[0, 1])
-    df_edge_embeddings.head()
 
-    # %% [markdown]
     # ### Concat edge embeddings
-
-    # %%
     for group in tqdm(groups_id):
         df_edge_embeddings_concat = pd.DataFrame()
         k = 0
@@ -95,13 +76,9 @@ def main(exp):
         
         df_edge_embeddings_concat.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option), index=True)
 
-    # %%
     df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option), index_col=[0, 1])
-    df_edge_embeddings_concat.head()
 
-    # %%
     # plot edge embeddings concat
-
     """ for group in tqdm(groups_id):
         df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option), index_col=[0, 1])
 
@@ -122,10 +99,7 @@ def main(exp):
         # plt.show()
         plt.clf() """
 
-    # %% [markdown]
     # ### Outliers detection
-
-    # %%
     # Outlier detection (HDBSCAN)
 
     """ df_edge_embeddings_concat = pd.read_csv("{}/output/edge_embeddings/edge-embeddings_concat_{}_{}_{}_{}.csv".format(group, method, dimension, "L2"), index_col=[0, 1])
@@ -142,9 +116,7 @@ def main(exp):
     print(len(inliers))
     inliers """
 
-    # %%
     # outlier detection (ECOD)
-
     # dict_df_edge_embeddings_concat_outlier = {}
     dict_df_edge_embeddings_concat_filter = {}
 
@@ -170,17 +142,9 @@ def main(exp):
         # dict_df_edge_embeddings_concat_outlier[group] = X_train
         dict_df_edge_embeddings_concat_filter[group] = df_edge_embeddings_concat_filter
 
-    # %%
-    df_edge_embeddings_concat_filter = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_outlier_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option), index_col=[0, 1])
-    df_edge_embeddings_concat_filter.head()
-
-    # %%
     df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
-    df_edge_embeddings_concat_filter.head()
 
-    # %%
     # plot outliers/inliers
-
     """ for group in tqdm(groups_id):
         fig = plt.figure(figsize = (10, 7))
         ax = plt.axes(projection ="3d")
@@ -207,16 +171,8 @@ def main(exp):
         # plt.show()
         plt.clf() """
 
-    # %% [markdown]
     # ###  Filter common edges
-
-    # %%
-    print(subgroups_id)
-    print(subgroups_id_op)
-
-    # %%
     # mapping idx with id
-
     for group in tqdm(groups_id):
         dict_df_nodes = {}
         for subgroup in subgroups_id_op[group]:
@@ -235,11 +191,8 @@ def main(exp):
         # set new index
         df_edge_embeddings_concat_filter.set_index([pd.Index(list_index)], inplace=True)
 
-    # %%
     df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
-    df_edge_embeddings_concat_filter.head()
 
-    # %%
     # format id
     if option:
         for group in tqdm(groups_id):
@@ -254,27 +207,18 @@ def main(exp):
             df_edge_embeddings_concat_filter.set_index([pd.Index(list_index)], inplace=True)
             df_edge_embeddings_concat_filter
 
-    # %%
     df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
-    df_edge_embeddings_concat_filter.head()
 
-    # %%
     # filter diferente edges
-
     if option:
         for group in tqdm(groups_id):
             df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
             df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter[df_edge_embeddings_concat_filter.index.get_level_values(0) != df_edge_embeddings_concat_filter.index.get_level_values(1)]
             dict_df_edge_embeddings_concat_filter[group] = df_edge_embeddings_concat_filter
 
-    # %%
     df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
-    print(df_edge_embeddings_concat_filter.shape)
-    df_edge_embeddings_concat_filter.head()
 
-    # %%
     # count edges and filter by count
-
     dict_df_edges_filter = {}
     for group in tqdm(groups_id):
         # read
@@ -297,51 +241,31 @@ def main(exp):
         df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter.iloc[:, [0, 1]]
         dict_df_edges_filter[group] = df_edge_embeddings_concat_filter
 
-    # %%
     df_edges_filter = dict_df_edges_filter[groups_id[0]]
-    df_edges_filter.head()
 
-    # %%
     # change data type
     for group in tqdm(groups_id):
         df_edges_filter = dict_df_edges_filter[group]
         df_edges_filter[["source", "target"]] = df_edges_filter[["source", "target"]].astype("string")
 
-    # %%
     df_edges_filter = dict_df_edges_filter[groups_id[0]]
-    df_edges_filter.head()
 
-    # %%
     # get weight by subgroups
-
     dict_df_edges_filter_weight = get_weight_global(dict_df_edges_filter, exp, groups_id, subgroups_id)
     df_edges_filter_weight = dict_df_edges_filter_weight[groups_id[0]]
-    df_edges_filter_weight.head()
 
-    # %%
     df_edges_filter_weight = dict_df_edges_filter_weight[groups_id[0]]
-    df_edges_filter_weight.head()
 
-    # %% [markdown]
     # ### Filter by STD and average weight
-
-    # %%
     dict_df_common_edges = std_global(dict_df_edges_filter_weight, exp, method, groups_id, option, th=0.3, plot=True, save=True)
-    dict_df_common_edges[groups_id[0]].head()
 
-    # %%
     df_common_edges = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option),
                                 dtype={"source": "string", "target": "string"})
-    df_common_edges.head()
 
-    # %%
     # show details
-
     """ for group in tqdm(groups_id):
         df_common_edges = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, group, option))
         
         G = nx.from_pandas_edgelist(df_common_edges, "source", "target", edge_attr=["weight"])
         print("Group: {}".format(group))
         graph_detail(G) """
-
-

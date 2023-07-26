@@ -13,7 +13,7 @@ from utils.response import Resp
 
 from GNN_Unsupervised import experiments as exper
 
-import threading
+from multiprocessing import Process
 import time
 
 def task1():
@@ -43,7 +43,7 @@ class ExperimentList(APIView):
             print(data.id)
 
             # run experiment
-            t1 = threading.Thread(target=exper.main, args=(str(data.id), data.raw_data, data.method,
+            t1 = Process(target=exper.main, args=(str(data.id), data.raw_data, data.method,
                                                            data.data_variation, data.dimension))
             # starting threads
             t1.start()

@@ -1,7 +1,4 @@
-# %% [markdown]
 # ### Imports
-
-# %%
 import os
 import sys
 
@@ -21,13 +18,8 @@ import sys
 
 # %load_ext autotime
 
-# %% [markdown]
-# ### Parameters
-
-# %%
 import json
 
-# %%
 def sort_edges(df_edges):
     s = []
     t = []
@@ -47,7 +39,6 @@ def count_values(df_column):
     df_count.columns = ["value", "count"]
     return df_count
 
-# %%
 def fisher_transform(r):
     # z = 0.5 * (np.log(1 + r) - np.log(1 - r))
     z = 0.5 * np.log((1 + r) / (1 - r))
@@ -65,6 +56,7 @@ def hist(x, th):
     # plt.clf()
 
 def main(exp):
+    # ### Parameters
     # Opening JSON file
     file = open("{}/input/parameters_{}.json".format(dir, exp))
     params = json.load(file)
@@ -86,14 +78,9 @@ def main(exp):
 
             groups = [groups_id[i], groups_id[j]] # change
             print("Groups:\t\t", groups)
-
-            # %% [markdown]
             # ### Changes detection
 
-            # %% [markdown]
             # #### Read edges
-
-            # %%
             list_graphs = []
             for k in range(len(groups)):
                 df_edges = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, groups[k], option),
@@ -104,10 +91,7 @@ def main(exp):
                 
                 list_graphs.append(G)
 
-            # %% [markdown]
             # #### Compose
-
-            # %%
             R = nx.compose(list_graphs[0], list_graphs[1])
 
             labels = []
@@ -115,23 +99,16 @@ def main(exp):
                 weights = R.get_edge_data(*edge)
                 label = get_label(weights)
                 labels.append(label)
-            labels
 
             nx.set_edge_attributes(R, {(u, v): {"label": get_label(ed, th=0.8)} for u, v, ed in R.edges.data()})
 
-            # %%
             df_change = nx.to_pandas_edgelist(R)
             df_change = df_change[["source", "target", "weight1", "weight2", "label"]]
-            df_change
 
-            # %%
             # df_change = df_change.fillna(0)
             # df_change
 
-            # %% [markdown]
             # ### Differences between correlations
-
-            # %%
             # option 1
             n1 = len(df_change)
             n2 = len(df_change)
@@ -152,48 +129,34 @@ def main(exp):
             # df_change["diff"] = diff
             # df_change["ztest"] = ztest
             df_change["p-value"] = p_value
-            df_change
 
-            # %%
-            df_temp = count_values(df_change["label"])
-            print(df_temp["count"].sum())
-            df_temp
+            # df_temp = count_values(df_change["label"])
 
-            # %%
-            df_temp = count_values(df_change["p-value"])
-            print(df_temp["count"].sum())
-            df_temp
+            # df_temp = count_values(df_change["p-value"])
 
-            # %%
             """ try:
                 x = df_change["p-value"]
                 hist(x, th=0.05)
             except:
                 pass """
 
-            # %%
             # filter by p-value
             df_change_filter = df_change[df_change["p-value"] < 0.05]
-            df_change_filter
 
-            # %%
             """ try:
                 x = df_change_filter["p-value"]
                 hist(x, th=0.05)
             except:
                 pass """
 
-            # %%
             """ df_temp = count_values(df_change_filter["label"])
             print(df_temp["count"].sum())
             df_temp """
 
-            # %%
             """ df_temp = count_values(df_change_filter["p-value"])
             print(df_temp["count"].sum())
             df_temp """
 
-            # %%
             # save
             df_change_filter.to_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option), index=False)
 
@@ -202,27 +165,19 @@ def main(exp):
 
             nx.write_gexf(H, "{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.gexf".format(dir, exp, method, groups[0], groups[1], option))
 
-            # %% [markdown]
             # ### Query
-
-            # %%
             """ df_temp = count_values(df_change_filter["source"])
             print(df_temp["count"].sum())
             df_temp """
 
-            # %%
             """ df_temp = count_values(df_change_filter["target"])
             print(df_temp["count"].sum())
             df_temp """
 
-            # %%
             """ node = "98.05823"
             df_change_filter[(df_change_filter["source"] == node) | (df_change_filter["target"] == node)] """
 
-            # %% [markdown]
             # ### Plot
-
-            # %%
             # HF = H.subgraph(["127.0513", "132.086", "145.0507", "980.0155", "132.086", "115.0038"])
             """ HF = H.subgraph(["173.05193", "139.05135", "98.05823"])
             edge_labels = nx.get_edge_attributes(HF, "label")
@@ -233,5 +188,3 @@ def main(exp):
 
             # plt.title("{}: {} --> {}".format(method, group1[0], group2[0]))
             plt.show() """
-
-

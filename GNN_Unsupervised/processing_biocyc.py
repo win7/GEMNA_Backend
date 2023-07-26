@@ -1,7 +1,4 @@
-# %% [markdown]
 # ### Imports
-
-# %%
 import os
 import sys
 
@@ -27,13 +24,10 @@ import sys
 
 # %load_ext autotime
 
-# %% [markdown]
-# ### Parameters
-
-# %%
 import json
 
-def main (exp):  
+def main (exp):
+    # ### Parameters
     # Opening JSON file
     file = open("{}/input/parameters_{}.json".format(dir, exp))
     params = json.load(file)
@@ -58,19 +52,12 @@ def main (exp):
             groups = [groups_id[i], groups_id[j]] # change
             print("Groups:\t\t", groups)
 
-            # %% [markdown]
             # ### Load data
-
-            # %%
             # load dataset groups
             df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)        
             df_join_raw.index = df_join_raw.index.astype("str")
-            df_join_raw.head()
 
-            # %% [markdown]
             # ### BioCyc
-
-            # %%
             # get filter graphs
 
             dict_graphs = {}
@@ -81,16 +68,12 @@ def main (exp):
                 G = nx.from_pandas_edgelist(df_common_edges, edge_attr=["weight"])
                 dict_graphs[group] = G
 
-            # %%
             # get nodes
-
             dict_nodes = {}
             for group in groups:
                 dict_nodes[group] = set(list(dict_graphs[group].nodes()))
 
-            # %%
             # set operation
-
             dict_set_operation = {}
             for group in groups:
                 dict_nodes_aux = dict_nodes.copy()
@@ -101,25 +84,19 @@ def main (exp):
 
             dict_set_operation["-".join(groups)] = set.intersection(*list(dict_nodes.values()))
 
-            print(dict_set_operation.keys())
-
-            # %%
             # print set size
             for key, value in dict_set_operation.items():
                 print(key, len(value))
 
-            # %%
             # delete nodes without metabollities name
             for group in dict_set_operation:
                 inter = dict_set_operation[group] & set(list(df_join_raw.index.values))
                 dict_set_operation[group] = list(inter)
 
-            # %%
             # print set size
             for key, value in dict_set_operation.items():
                 print(key, len(value))
 
-            # %%
             # mapping metabolite name with ratio (2)
             for key, value in dict_set_operation.items():
                 nodes = dict_set_operation[key]
@@ -142,15 +119,13 @@ def main (exp):
 
                 # df_biocyc["metabolities"] = df_metadata.loc[common_nodes]["Metabolites - Approved by Nicola"].values
                 df_biocyc.insert(1, "metabolities", df_join_raw.loc[nodes]["Name"].values)
-
                 df_biocyc = df_biocyc.iloc[:, 1:]
-                print(key, df_biocyc.shape)
+
                 # save
                 df_biocyc.to_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(dir, exp, method, key, option), 
                                 index=False, header=False, sep="\t")
                 # df_biocyc.head()
 
-            # %%
             # mapping metabolite name with ratio (3)
             """ for key, value in dict_set_operation.items():
                 nodes = dict_set_operation[key]
@@ -175,8 +150,4 @@ def main (exp):
                                 index=False, header=False, sep="\t")
                 # df_biocyc.head() """
 
-            # %%
             df_biocyc = pd.read_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(dir, exp, method, "-".join(groups), option), sep="\t")
-            df_biocyc.head()
-
-

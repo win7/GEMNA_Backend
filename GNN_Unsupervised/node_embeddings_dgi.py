@@ -1,15 +1,12 @@
-# %% [markdown]
 # ### Imports
-
-# %%
 import os
 import sys
 
-print(sys.path)
-sys.path.append("/home/ealvarez/Project/MetaNet/GNN_Unsupervised/utils")
+dir = os.getcwd() + "/GNN_Unsupervised"
+sys.path.append(dir)
 
 from tqdm import tqdm
-from utils import *
+from utils.utils import *
 
 import argparse, time
 
@@ -25,26 +22,16 @@ from dgl.data import load_data, register_data_args, DGLDataset
 
 import os
 
-# %%
 from tqdm import tqdm
 import pandas as pd
 
 os.environ["DGLBACKEND"] = "pytorch"
 # %load_ext autotime
 
-# %%
 import sys
 
-dir = os.getcwd() + "/GNN_Unsupervised"
-sys.path.append(dir)
-
-# from utils.utils import *
-
-# %%
 torch.manual_seed(42)
 np.random.seed(42)
-
-# %%
 
 def evaluate(model, features, labels, mask):
     model.eval()
@@ -205,16 +192,11 @@ def train_dgi(exp, graph, args, method, group, subgroup):
     # print("Save node embeddings")
 
 def main(exp):
-    
-    # %% [markdown]
     # ### Parameters
-
-    # %%
     import json
 
     # dir = os.path.dirname(os.path.dirname(os.getcwd()))
     # dir = os.path.dirname(os.getcwd())
-    print(dir)
 
     # opening JSON file
     file = open("{}/input/parameters_{}.json".format(dir, exp))
@@ -243,25 +225,15 @@ def main(exp):
             subgroups_id[group] = [option]
         print("Subgroups id:\t", subgroups_id)
 
-    # %% [markdown]
     # ### Node embeddings
-
-    # %%
     # custom dataset
-
-    
-    # %%
     nodes_data = pd.read_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, groups_id[0], subgroups_id[groups_id[0]][0]))
     edges_data = pd.read_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, groups_id[0], subgroups_id[groups_id[0]][0]))
 
     dataset = CustomDataset("g1", nodes_data, edges_data)
     graph = dataset[0]
 
-    print(graph)
-
-    # %%
     # params
-
     parser = argparse.ArgumentParser(description="DGI")
     # register_data_args(parser)
     parser.add_argument(
@@ -318,11 +290,7 @@ def main(exp):
     parser.set_defaults(n_layers=3)
     args = parser.parse_args("")
 
-    print(args)
-
-    # %%
     # get node embeddings
-
     for group in tqdm(groups_id):
         for subgroup in tqdm(subgroups_id[group]):
             nodes_data = pd.read_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, group, subgroup))
@@ -336,9 +304,5 @@ def main(exp):
             # train
             train_dgi(exp, graph, args, method, group, subgroup)
 
-    # %%
     df_node_embeddings = pd.read_csv("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], 
                                                                                                         subgroups_id[groups_id[0]][0]), index_col=0)
-    df_node_embeddings.head()
-
-

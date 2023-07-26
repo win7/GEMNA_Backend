@@ -37,8 +37,7 @@ name_reduction = ["PCA", "TSNE", "UMAP"]
 cpu_count = os.cpu_count()
 
 dir = os.getcwd() + "/GNN_Unsupervised"
-f = "3"
-print("XXX", dir, f)
+
 def sort_df_edges(df_edges):
     s = []
     t = []

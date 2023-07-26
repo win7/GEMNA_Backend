@@ -15,6 +15,12 @@ option_choice = (
 	("dyn", "dyn")
 )
 
+status_choice = (
+	("s1", "start"), 
+	("s2", "processing"),
+	("s2", "end")
+)
+
 class Experiment(models.Model):
 	"""docstring for Experiment"""
 	id = models.UUIDField("Id", primary_key=True, default=uuid.uuid4, editable=False)
