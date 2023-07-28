@@ -3,7 +3,9 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from main.models import Experiment
 from main.serializers import ExperimentSerializer
 from django.http import Http404
+from django.http import JsonResponse
 
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -15,10 +17,6 @@ from GNN_Unsupervised import experiments as exper
 
 from multiprocessing import Process
 import time
-
-def task1():
-    time.sleep(30)
-    print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
 
 class ExperimentList(APIView):
     """
@@ -63,15 +61,22 @@ class ExperimentDetail(APIView):
 
     def get_object(self, pk):
         try:
-            return Experiment.objects.get(pk=pk)
+            experiment = Experiment.objects.get(pk=pk)
+            return experiment
         except Experiment.DoesNotExist:
-            return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
+            raise Http404
 
     def get(self, request, pk, format=None):
-        experiment = self.get_object(pk)
-        serializer = ExperimentSerializer(experiment)
-        return Resp(data=serializer.data, message="Experiment Successfully Recovered.").send()
+        try:
+            experiment = Experiment.objects.get(pk=pk)
+            serializer = ExperimentSerializer(experiment)
 
+            return Resp(data=serializer.data, message="Experiment Successfully Recovered.").send()
+        except Experiment.DoesNotExist:
+            return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
+        finally:
+            return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
+       
     def put(self, request, pk, format=None):
         experiment = self.get_object(pk)
         serializer = ExperimentSerializer(experiment, data=request.data)

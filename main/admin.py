@@ -6,4 +6,4 @@ from main.models import *
 @admin.register(Experiment)
 class ExperimentAdmin(admin.ModelAdmin):
 	"""docstring for ExperimentAdmin"""
-	list_display = ["method", "data_variation", "dimension", "runtime", "raw_data"]
+	list_display = ["id", "created_at", "method", "data_variation", "dimension", "runtime", "raw_data"]
