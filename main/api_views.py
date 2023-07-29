@@ -12,11 +12,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from utils.response import Resp
+from utils.utils import info_graph
 
 from GNN_Unsupervised import experiments as exper
 
 from multiprocessing import Process
 import time
+import pandas as pd
+import networkx as nx
+import os
 
 class ExperimentList(APIView):
     """
@@ -68,13 +72,45 @@ class ExperimentDetail(APIView):
 
     def get(self, request, pk, format=None):
         try:
-            experiment = Experiment.objects.get(pk=pk)
-            serializer = ExperimentSerializer(experiment)
+            try:
+                experiment = Experiment.objects.get(pk=pk)
+                serializer = ExperimentSerializer(experiment)
+                
+                dir_path = "{}/GNN_Unsupervised/output/{}/changes/".format(os.getcwd(), serializer.data["id"])
+                files = os.listdir(dir_path)
 
-            return Resp(data=serializer.data, message="Experiment Successfully Recovered.").send()
+                data = []
+                for item in files:
+                    aux = item.split("_")
+                    name = "{}-{}".format(aux[4], aux[5])
+                    dir = "{}/GNN_Unsupervised/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
+                    df_change_filter = pd.read_csv(dir)
+                    df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
+                    # data[name] = df_change_filter.to_dict(orient="records")
+
+                    # df_temp = df_change_filter["label"].value_counts().to_frame().reset_index()
+                    graph = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
+                    
+                    values = ['PP', 'Pp', 'PN', 'Pn', 'P?', 'pP', 'pp', 'pN', 'pn', 'p?', 'NP', 'Np', 'NN', 'Nn', 'N?', 'nP', 'np', 'nN', 'nn', 'n?', '?P', '?p', '?N', '?n']
+                    labels = []
+                    for label in values:
+                        labels.append({
+                            "label": label,
+                            "count": len(df_change_filter[df_change_filter.label == label])
+                        })
+                    aux_data = {
+                        "name": name,
+                        "nodes": graph.number_of_nodes(),
+                        "edges": graph.number_of_edges(),
+                        "density": round(nx.density(graph), 4),
+                        "labels": labels
+                    }
+                    data.append(aux_data)
+                return Resp(data=data, message="Experiment Successfully Recovered.").send()
+            except Exception as e:
+                print(str(e))
+                return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR).send()
         except Experiment.DoesNotExist:
-            return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
-        finally:
             return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
        
     def put(self, request, pk, format=None):
