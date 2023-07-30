@@ -20,7 +20,10 @@ from multiprocessing import Process
 import time
 import pandas as pd
 import networkx as nx
+import numpy as np
 import os
+
+values = ['PP', 'Pp', 'PN', 'Pn', 'P?', 'pP', 'pp', 'pN', 'pn', 'p?', 'NP', 'Np', 'NN', 'Nn', 'N?', 'nP', 'np', 'nN', 'nn', 'n?', '?P', '?p', '?N', '?n']
 
 class ExperimentList(APIView):
     """
@@ -79,23 +82,22 @@ class ExperimentDetail(APIView):
                 dir_path = "{}/GNN_Unsupervised/output/{}/changes/".format(os.getcwd(), serializer.data["id"])
                 files = os.listdir(dir_path)
 
-                data = []
+                details = []
+                nodes = []
                 for item in files:
                     aux = item.split("_")
                     name = "{}-{}".format(aux[4], aux[5])
                     dir = "{}/GNN_Unsupervised/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
-                    df_change_filter = pd.read_csv(dir)
+                    df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
                     df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
-                    # data[name] = df_change_filter.to_dict(orient="records")
 
-                    # df_temp = df_change_filter["label"].value_counts().to_frame().reset_index()
                     graph = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
-                    
-                    values = ['PP', 'Pp', 'PN', 'Pn', 'P?', 'pP', 'pp', 'pN', 'pn', 'p?', 'NP', 'Np', 'NN', 'Nn', 'N?', 'nP', 'np', 'nN', 'nn', 'n?', '?P', '?p', '?N', '?n']
+                    nodes += list(graph.nodes())
+
                     labels = []
                     for label in values:
                         labels.append({
-                            "label": label,
+                            # "label": label,
                             "count": len(df_change_filter[df_change_filter.label == label])
                         })
                     aux_data = {
@@ -105,7 +107,12 @@ class ExperimentDetail(APIView):
                         "density": round(nx.density(graph), 4),
                         "labels": labels
                     }
-                    data.append(aux_data)
+                    details.append(aux_data)
+                nodes = np.unique(nodes)
+                data = {
+                    "details": details,
+                    "nodes": nodes
+                }
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
                 print(str(e))
@@ -125,3 +132,43 @@ class ExperimentDetail(APIView):
         experiment = self.get_object(pk)
         experiment.delete()
         return Resp(message="Experiment Deleted Successfully.", status=status.HTTP_204_NO_CONTENT).send()
+
+class ExperimentConsult(APIView):
+    """
+    Consult experiment.
+    """
+    # permission_classes = (IsAuthenticated,)
+	# serializer_class = ExperimentSerialize
+
+    def get(self, request, format=None):
+        return Resp(message="", status=status.HTTP_501_NOT_IMPLEMENTED).send()
+
+    def post(self, request, format=None):
+        try:
+            try:
+                print(request.data)
+
+                pk = request.data["id"]
+                group = request.data["group"]
+                nodes = request.data["nodes"]
+
+                experiment = Experiment.objects.get(pk=pk)
+
+                dir = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_p-value_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
+                                                                                                             experiment.method, group.replace("-", "_"), experiment.data_variation)
+                df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
+                df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
+                print(df_change_filter)
+                
+                H = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
+                HF = H.subgraph(nodes)
+                df_change_filter_sub = nx.to_pandas_edgelist(HF)
+
+                # edge_labels = nx.get_edge_attributes(HF, "label")
+                data = df_change_filter_sub.to_dict(orient="records")
+                return Resp(data=data, message="Experiment Successfully Recovered.").send()
+            except Exception as e:
+                print(str(e))
+                return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR).send()
+        except Experiment.DoesNotExist:
+            return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
