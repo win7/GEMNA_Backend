@@ -160,10 +160,9 @@ def main(exp):
             # save
             df_change_filter.to_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option), index=False)
 
-            H = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
+            """ H = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
             # H.edges(data=True)
-
-            nx.write_gexf(H, "{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.gexf".format(dir, exp, method, groups[0], groups[1], option))
+            nx.write_gexf(H, "{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.gexf".format(dir, exp, method, groups[0], groups[1], option)) """
 
             # ### Query
             """ df_temp = count_values(df_change_filter["source"])

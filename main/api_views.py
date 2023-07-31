@@ -11,6 +11,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
+from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
+from django.conf import settings
+
 from utils.response import Resp
 from utils.utils import info_graph
 
@@ -35,6 +39,7 @@ class ExperimentList(APIView):
 
     def get(self, request, format=None):
         experiments = Experiment.objects.all()
+
         serializer = ExperimentSerializer(experiments, many=True)
         return Resp(data=serializer.data, message="Experiments Successfully Recovered.").send()
 
@@ -45,11 +50,9 @@ class ExperimentList(APIView):
         if serializer.is_valid():
             data = serializer.save()
 
-            print(data.id)
-
             # run experiment
             t1 = Process(target=exper.main, args=(str(data.id), data.raw_data, data.method,
-                                                           data.data_variation, data.dimension))
+                                                           data.data_variation, data.dimension, data.email))
             # starting threads
             t1.start()
             # wait until all threads finish
@@ -89,6 +92,7 @@ class ExperimentDetail(APIView):
                     name = "{}-{}".format(aux[4], aux[5])
                     dir = "{}/GNN_Unsupervised/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
                     df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
+                    print(df_change_filter)
                     df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
 
                     graph = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
