@@ -30,6 +30,8 @@ class Experiment(models.Model):
 	data_variation = models.CharField("Dataset variation", choices=option_choice, default=option_choice[0][0], max_length=4)
 	dimension = models.IntegerField("Dimension", default=3)
 	raw_data = models.FileField("Raw data", upload_to='GNN_Unsupervised/raw_data/', blank=False, null=False)
+	control = models.CharField("control", max_length=64)
+	range = models.IntegerField("Range", default=0)
 	runtime = models.IntegerField("Runtime", default=0)
 	email = models.EmailField("Email", blank=False, null=False)
 	detail = models.TextField("Details", max_length=100, blank=True, null=True)

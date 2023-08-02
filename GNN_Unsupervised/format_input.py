@@ -42,7 +42,7 @@ def main(exp, raw_data_file, method, option, dimension):
     # concat
     df_join_raw = pd.concat([
         df_raw.iloc[:, :]], axis=1)
-    df_join_raw.set_index("Aligment ID", inplace=True)
+    df_join_raw.set_index("Alignment ID", inplace=True)
 
     # split
     # print(df_join_raw.shape)
