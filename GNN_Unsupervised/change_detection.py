@@ -158,7 +158,7 @@ def main(exp):
             df_temp """
 
             # #### Mapping Aligment ID to Average Mz
-            df_join_raw = pd.read_csv("input/{}_raw.csv".format(exp), index_col=0)        
+            df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)        
             df_join_raw.index = df_join_raw.index.astype("str")
 
             dict_aux = df_join_raw.iloc[:, :2].to_dict(orient='dict')

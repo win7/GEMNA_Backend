@@ -21,7 +21,7 @@ import json
 def main(exp):
     # ### Parameters
     # Opening JSON file
-    print(dir)
+    # print(dir)
     file = open("{}/input/parameters_{}.json".format(dir, exp))
     params = json.load(file)
 
@@ -42,7 +42,7 @@ def main(exp):
 
     # ### Load dataset
     # load dataset groups
-    df_join_raw = pd.read_csv("input/{}_raw.csv".format(exp), index_col=0)
+    df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)
     df_join_raw = df_join_raw.iloc[:, 2:]
 
     # ### Generate graphs

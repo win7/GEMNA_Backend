@@ -49,7 +49,6 @@ def main(exp):
     print("Option:\t\t", option)
 
     if option:
-        
         subgroups_id_op = {}
         for group in groups_id:
             subgroups_id_op[group] = [option]
