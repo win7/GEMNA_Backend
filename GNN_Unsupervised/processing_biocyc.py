@@ -118,7 +118,7 @@ def main (exp):
                 df_biocyc["ratio"] = np.log10(np.divide(list_data[0], list_data[1]))
 
                 # df_biocyc["metabolities"] = df_metadata.loc[common_nodes]["Metabolites - Approved by Nicola"].values
-                df_biocyc.insert(1, "metabolities", df_join_raw.loc[nodes]["Name"].values)
+                df_biocyc.insert(1, "metabolities", df_join_raw.loc[nodes]["Metabolite name"].values)
                 df_biocyc = df_biocyc.iloc[:, 1:]
 
                 # save

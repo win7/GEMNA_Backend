@@ -92,7 +92,7 @@ class ExperimentDetail(APIView):
                     name = "{}-{}".format(aux[4], aux[5])
                     dir = "{}/GNN_Unsupervised/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
                     df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
-                    print(df_change_filter)
+                    # print(df_change_filter)
                     df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
 
                     graph = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())

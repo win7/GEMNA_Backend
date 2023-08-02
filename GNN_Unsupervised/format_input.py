@@ -33,24 +33,25 @@ def main(exp, raw_data_file, method, option, dimension):
     raw_data_file = "Trial 1_Reinhard" # change """
 
     # load dataset groups
-    df1 = pd.read_csv("{}".format(raw_data_file), delimiter="|")
+    df_raw = pd.read_csv("{}".format(raw_data_file), delimiter="|")
 
     # drop duplicates
-    df1.drop_duplicates(subset=["Id"], keep="last", inplace=True)
+    # df1.drop_duplicates(subset=["Id"], keep="last", inplace=True)
 
     # ### Format dataset
     # concat
     df_join_raw = pd.concat([
-        df1.iloc[:, :]], axis=1)
-    df_join_raw.set_index("Id", inplace=True)
+        df_raw.iloc[:, :]], axis=1)
+    df_join_raw.set_index("Aligment ID", inplace=True)
 
+    # split
     # print(df_join_raw.shape)
     df_join_raw = df_join_raw.rename_axis(None)
-    df_join_raw = df_join_raw.iloc[:, 0:]
+    # df_join_raw = df_join_raw.iloc[:, 2:]
 
     # get groups name
     groups_id = []
-    for item in df_join_raw.iloc[:, 1:].columns.values:
+    for item in df_join_raw.iloc[:, 2:].columns.values:
         group_id = item.split("_")[0]
         if group_id not in groups_id:
             groups_id.append(group_id)
@@ -71,14 +72,13 @@ def main(exp, raw_data_file, method, option, dimension):
 
     # get options
     options = {}
-
     for group in groups_id:
         options[group] = [option]
 
     # ### Save dataset and parameters
     # save dataset
     df_join_raw.to_csv("{}/input/{}_raw.csv".format(dir, exp), index=True)
-
+    
     # save parameters
     parameters = {
         # "raw_folder": raw_data_folder,

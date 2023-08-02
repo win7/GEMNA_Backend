@@ -55,7 +55,7 @@ def main(exp, raw_data, method, option, dimension, email):
     msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
     msg.attach_alternative(html_content, "text/html")
 
-    dir = "/home/ealvarez/Project/MetaNet/GNN_Unsupervised/output/{}/biocyc/".format(exp)
+    dir = "{}/GNN_Unsupervised/output/{}/biocyc/".format(os.getcwd(), exp)
 
     files = os.listdir(dir)
     for item in files:

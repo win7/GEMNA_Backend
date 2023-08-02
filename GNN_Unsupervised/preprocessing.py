@@ -42,8 +42,8 @@ def main(exp):
 
     # ### Load dataset
     # load dataset groups
-    df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)
-    df_join_raw = df_join_raw.iloc[:, 1:]
+    df_join_raw = pd.read_csv("input/{}_raw.csv".format(exp), index_col=0)
+    df_join_raw = df_join_raw.iloc[:, 2:]
 
     # ### Generate graphs
     # logarithm

@@ -157,6 +157,25 @@ def main(exp):
             print(df_temp["count"].sum())
             df_temp """
 
+            # #### Mapping Aligment ID to Average Mz
+            df_join_raw = pd.read_csv("input/{}_raw.csv".format(exp), index_col=0)        
+            df_join_raw.index = df_join_raw.index.astype("str")
+
+            dict_aux = df_join_raw.iloc[:, :2].to_dict(orient='dict')
+            # dict_aux
+
+            dict_mz = dict_aux["Average Mz"]
+            dict_mz = {str(key): value for key, value in dict_mz.items()}
+            # dict_mz
+
+            dict_metabolite = dict_aux["Metabolite name"]
+            dict_metabolite = {str(key): value for key, value in dict_metabolite.items()}
+            # dict_metabolite
+
+            # mapping
+            df_change_filter["source"] = df_change_filter["source"].map(dict_mz)
+            df_change_filter["target"] = df_change_filter["target"].map(dict_mz)
+
             # save
             df_change_filter.to_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option), index=False)
 
