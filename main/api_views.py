@@ -21,6 +21,8 @@ from utils.utils import info_graph
 from GNN_Unsupervised import experiments as exper
 
 from multiprocessing import Process
+# import threading
+
 import time
 import pandas as pd
 import networkx as nx
@@ -51,8 +53,9 @@ class ExperimentList(APIView):
             data = serializer.save()
 
             # run experiment
-            t1 = Process(target=exper.main, args=(str(data.id), data.raw_data, data.method,
-                                                           data.data_variation, data.dimension, data.email))
+            t1 = Process(target=exper.main, args=(data,))
+            """ t1 = threading.Thread(target=exper.main, args=(str(data.id), data.raw_data, data.method,
+                                                           data.data_variation, data.dimension, data.email)) """
             # starting threads
             t1.start()
             # wait until all threads finish

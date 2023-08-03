@@ -29,6 +29,7 @@ os.environ["DGLBACKEND"] = "pytorch"
 # %load_ext autotime
 
 import sys
+import json
 
 torch.manual_seed(42)
 np.random.seed(42)
@@ -191,15 +192,14 @@ def train_dgi(exp, graph, args, method, group, subgroup):
     df_node_embeddings.to_csv("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}.csv".format(dir, exp, method, group, subgroup), index=True)
     # print("Save node embeddings")
 
-def main(exp):
+def main(experiment):
     # ### Parameters
-    import json
 
     # dir = os.path.dirname(os.path.dirname(os.getcwd()))
     # dir = os.path.dirname(os.getcwd())
 
     # opening JSON file
-    file = open("{}/input/parameters_{}.json".format(dir, exp))
+    file = open("{}/input/parameters_{}.json".format(dir, experiment.id))
     params = json.load(file)
 
     exp = params["exp"]

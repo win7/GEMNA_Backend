@@ -17,45 +17,44 @@ import processing_biocyc as pb
 
 import time
 
-""" exp = "exp102"
+""" exp = "518b4e5d-4097-486a-907b-936002091f5e"
+raw_data = "GNN_Unsupervised/raw_data/Trial_1_Reinhard_0hXQP9m.csv"
 method = "dgi" # vgae, dgi
 dimension = 3
 option = "dyn" # dyn, str
-raw_data_file = "Trial 1_Reinhard" """
+email = "win7.eam@gmail.com" """
 
-def main(exp, raw_data, method, option, dimension, email):
-    # exp = "83d59431-f3f2-4258-8cd0-5124026e4e5c"
+def main(experiment):
+    # print(exp, raw_data, method, option, dimension, email)
+    # exp = "010853ec-3b7f-4255-bfbf-cb36ac59119f"
     print("Start")
     start = time.time()
 
-    fi.main(exp, raw_data, method, option, dimension)
+    print("\nFormat input")
+    fi.main(experiment)
 
-    pp.main(exp)
+    print("\nPreprocessing")
+    pp.main(experiment)
 
-    dgi.main(exp)
+    print("\nNode embeddings")
+    dgi.main(experiment)
 
-    pg.main(exp)
+    print("\nProcessing")
+    pg.main(experiment)
 
-    cd.main(exp)
+    print("\nChange detection")
+    cd.main(experiment)
 
-    pb.main(exp)
+    print("\nProcessing biocyc")
+    pb.main(experiment)
 
-    """ email = "edwin.alvarez@pucp.edu.pe"
-    subject, from_email, to = "Confirmación de Pago", settings.EMAIL_HOST_USER, email
-    text_content = "Gracias..."
-    html_content = "<h1>Test</>"
-
-    msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send() """
-
-    subject, from_email, to = 'Metabolomic Analysis', 'edwin.alvarez@pucp.edu.pe', email
+    subject, from_email, to = 'Metabolomic Analysis', 'edwin.alvarez@pucp.edu.pe', experiment.email
     text_content = 'This is an important message.'
-    html_content = '<p>This is the experiment code <strong>' + exp + '</strong>.</p>'
+    html_content = '<p>This is the experiment code <strong>' + str(experiment.id) + '</strong>.</p>'
     msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
     msg.attach_alternative(html_content, "text/html")
 
-    dir = "{}/GNN_Unsupervised/output/{}/biocyc/".format(os.getcwd(), exp)
+    dir = "{}/GNN_Unsupervised/output/{}/biocyc/".format(os.getcwd(), experiment.id)
 
     files = os.listdir(dir)
     for item in files:

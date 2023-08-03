@@ -18,7 +18,7 @@ import sys
 # %load_ext autotime
 
 # ### Parameters
-def main(exp, raw_data_file, method, option, dimension):
+def main(experiment):
     """ dir_path = "output"
 
     res = sorted(os.listdir(dir_path))
@@ -33,7 +33,7 @@ def main(exp, raw_data_file, method, option, dimension):
     raw_data_file = "Trial 1_Reinhard" # change """
 
     # load dataset groups
-    df_raw = pd.read_csv("{}".format(raw_data_file), delimiter="|")
+    df_raw = pd.read_csv("{}".format(experiment.raw_data), delimiter="|")
     
     # drop duplicates
     # df1.drop_duplicates(subset=["Id"], keep="last", inplace=True)
@@ -56,58 +56,48 @@ def main(exp, raw_data_file, method, option, dimension):
         if group_id not in groups_id:
             groups_id.append(group_id)
 
-    # change columns name (AB1.1)
-    """ columns = df_join_raw.columns.values
-
-    for i in range(len(columns)):
-        # remove white space
-        columns[i] = columns[i].replace(" ", "")
-        columns[i] = columns[i].split("/")[1] 
-
-    df_join_raw.columns = columns
-    df_join_raw """
-
     # get subgroups names
     subgroups_id = get_subgroups_id(df_join_raw, groups_id)
 
     # get options
     options = {}
     for group in groups_id:
-        options[group] = [option]
+        options[group] = [experiment.data_variation]
 
     # ### Save dataset and parameters
     # save dataset
-    df_join_raw.to_csv("{}/input/{}_raw.csv".format(dir, exp), index=True)
+    df_join_raw.to_csv("{}/input/{}_raw.csv".format(dir, experiment.id), index=True)
     
     # save parameters
     parameters = {
         # "raw_folder": raw_data_folder,
-        "exp": exp,
-        "method": method,
-        "dimension": dimension,
+        "exp": str(experiment.id),
+        "method": experiment.method,
+        "dimension": experiment.dimension,
         "groups_id": groups_id,
         "subgroups_id": subgroups_id,
-        "option": option
+        "option": experiment.data_variation,
+        "control": experiment.control,
+        "range": experiment.range
     }
-    
-    json_object = json.dumps(parameters)
-    with open("{}/input/parameters_{}.json".format(dir, exp), "w") as outfile:
+
+    with open("{}/input/parameters_{}.json".format(dir, experiment.id), "w") as outfile:
         json.dump(parameters, outfile, indent=4)
 
     # ### Create folders
     # create experiments folder
     try: 
-        os.mkdir("{}/output/{}".format(dir, exp))
-        os.mkdir("{}/output/{}/correlations".format(dir, exp))
-        os.mkdir("{}/output/{}/preprocessing".format(dir, exp))
-        os.mkdir("{}/output/{}/preprocessing/edges".format(dir, exp))
-        os.mkdir("{}/output/{}/preprocessing/graphs".format(dir, exp))
-        os.mkdir("{}/output/{}/preprocessing/graphs_data".format(dir, exp))
-        os.mkdir("{}/output/{}/node_embeddings".format(dir, exp))
-        os.mkdir("{}/output/{}/edge_embeddings".format(dir, exp))
-        os.mkdir("{}/output/{}/common_edges".format(dir, exp))
-        os.mkdir("{}/output/{}/changes".format(dir, exp))
-        os.mkdir("{}/output/{}/plots".format(dir, exp))
-        os.mkdir("{}/output/{}/biocyc".format(dir, exp))
+        os.mkdir("{}/output/{}".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/correlations".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/preprocessing".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/preprocessing/edges".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/preprocessing/graphs".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/preprocessing/graphs_data".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/node_embeddings".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/edge_embeddings".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/common_edges".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/changes".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/plots".format(dir, experiment.id))
+        os.mkdir("{}/output/{}/biocyc".format(dir, experiment.id))
     except OSError as error: 
         print(error)

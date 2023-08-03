@@ -18,11 +18,11 @@ import sys
 
 import json
 
-def main(exp):
+def main(experiment):
     # ### Parameters
     # Opening JSON file
     # print(dir)
-    file = open("{}/input/parameters_{}.json".format(dir, exp))
+    file = open("{}/input/parameters_{}.json".format(dir, experiment.id))
     params = json.load(file)
 
     # dir = os.path.dirname(os.getcwd())

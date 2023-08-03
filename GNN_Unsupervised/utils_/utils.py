@@ -6,7 +6,7 @@ from sklearn.metrics import adjusted_rand_score, rand_score, silhouette_samples,
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.preprocessing import Normalizer
 from sklearn.manifold import TSNE, MDS, Isomap, LocallyLinearEmbedding, SpectralEmbedding
-# from hdbscan import HDBSCAN
+from hdbscan import HDBSCAN
 # from umap import UMAP
 from tqdm import tqdm
 
@@ -36,8 +36,6 @@ name_reduction = ["PCA", "TSNE", "UMAP"]
 
 cpu_count = os.cpu_count()
 
-dir = os.getcwd() + "/GNN_Unsupervised"
-
 def sort_df_edges(df_edges):
     s = []
     t = []
@@ -55,7 +53,7 @@ def create_graph_data_other(exp, groups_id, subgroups_id, option):
     for group in tqdm(groups_id):
         list_graphs = []
         for subgroup in tqdm(subgroups_id[group]):
-            df_weighted_edges = pd.read_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, group, subgroup), dtype={"source": "string", "target": "string"})
+            df_weighted_edges = pd.read_csv("output/{}/preprocessing/edges/edges_{}_{}.csv".format(exp, group, subgroup), dtype={"source": "string", "target": "string"})
             G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr="weight")
             list_graphs.append(G)
 
@@ -80,12 +78,12 @@ def create_graph_data_other(exp, groups_id, subgroups_id, option):
 
         df_nodes = pd.DataFrame(degree.items(), columns=["idx", "degree"])
         df_nodes["id"] = list(mapping.keys())
-        df_nodes.to_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, group, option), index=False)
+        df_nodes.to_csv("output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(exp, group, option), index=False)
 
         edges = list(U.edges())
         df_edges = pd.DataFrame(edges, columns=["source", "target"])
         df_edges["weight"] = [U.get_edge_data(edge[0], edge[1])["weight"] for edge in edges]
-        df_edges.to_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, option), index=False)
+        df_edges.to_csv("output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(exp, group, option), index=False)
 
 def get_label(weights, th=0.8):
     w1 = weights.get("weight1")
@@ -129,7 +127,7 @@ def std_global(dict_df_edges_filter_weight, exp, method, groups_id, option, th=0
         df_edges_filter_weight["std"] = np.std(df_edges_filter_weight.iloc[:, 2:], axis=1)
 
         # save
-        df_edges_filter_weight.to_csv("{}/output/{}/common_edges/std_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
+        df_edges_filter_weight.to_csv("output/{}/common_edges/std_{}_{}_{}.csv".format(exp, method, group, option), index=False)
 
         # filter std < 0.3
         df_edges_filter_weight_std = df_edges_filter_weight[df_edges_filter_weight["std"] < th]
@@ -142,10 +140,10 @@ def std_global(dict_df_edges_filter_weight, exp, method, groups_id, option, th=0
 
         # save
         if save:
-            df_edges_filter_weight_std_avg.to_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
+            df_edges_filter_weight_std_avg.to_csv("output/{}/common_edges/common_edges_{}_{}_{}.csv".format(exp, method, group, option), index=False)
             
             G = nx.from_pandas_edgelist(df_edges_filter_weight_std_avg, "source", "target", edge_attr=["weight"])
-            nx.write_gexf(G, "{}/output/{}/common_edges/common_edges_{}_{}_{}.gexf".format(dir, exp, method, group, option))
+            nx.write_gexf(G, "output/{}/common_edges/common_edges_{}_{}_{}.gexf".format(exp, method, group, option))
 
         # plot
         """ if plot:
@@ -155,7 +153,7 @@ def std_global(dict_df_edges_filter_weight, exp, method, groups_id, option, th=0
             l = len(df_edges_filter_weight) - len(df_edges_filter_weight_std)
             t = len(df_edges_filter_weight)
             plt.title("Loss: {} of {} ({}%)".format(l, t, round(l*100/t)))
-            plt.savefig("{}/output/{}/plots/common_edges_std_{}_{}_{}.png".format(dir, exp, method, group, option))
+            plt.savefig("output/{}/plots/common_edges_std_{}_{}_{}.png".format(exp, method, group, option))
             # plt.show()
             plt.clf() """
 
@@ -185,7 +183,7 @@ def get_weight_global(dict_df_edges_filter, exp, groups_id, subgroups_id):
         list_aux = df_edges_filter_weight.iloc[:, -1].values
 
         for subgroup in tqdm(subgroups_id[group]):
-            df_edges = pd.read_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, group, subgroup),
+            df_edges = pd.read_csv("output/{}/preprocessing/edges/edges_{}_{}.csv".format(exp, group, subgroup),
                                    dtype={"source": "string", "target": "string"})
             s = []
             t = []
@@ -232,10 +230,10 @@ def std_global_(dict_df_edges_filter_weight, exp, method, dimension, groups_id, 
 
         # save
         if save:
-            df_edges_filter_weight_std_avg.to_csv("{}/output/{}/baseline/common_edges/common_edges_std_{}_{}_{}_{}.csv".format(dir, exp, group, method, dimension, "L2"), index=False)
+            df_edges_filter_weight_std_avg.to_csv("output/{}/baseline/common_edges/common_edges_std_{}_{}_{}_{}.csv".format(exp, group, method, dimension, "L2"), index=False)
             
             G = nx.from_pandas_edgelist(df_edges_filter_weight_std_avg, "source", "target", edge_attr=["weight"])
-            nx.write_gexf(G, "{}/output/{}/baseline/common_edges/common_edges_std_{}_{}_{}_{}.gexf".format(dir, exp, group, method, dimension, "L2"))
+            nx.write_gexf(G, "output/{}/baseline/common_edges/common_edges_std_{}_{}_{}_{}.gexf".format(exp, group, method, dimension, "L2"))
 
         # plot
         if plot:
@@ -245,7 +243,7 @@ def std_global_(dict_df_edges_filter_weight, exp, method, dimension, groups_id, 
             l = len(df_edges_filter_weight) - len(df_edges_filter_weight_std)
             t = len(df_edges_filter_weight)
             plt.title("Loss: {} of {} ({}%)".format(l, t, round(l*100/t)))
-            plt.savefig("{}/output/{}/baseline/plots/common_edges_std_{}_{}_{}_{}.png".format(dir, exp, group, method, dimension, "L2"))
+            plt.savefig("output/{}/baseline/plots/common_edges_std_{}_{}_{}_{}.png".format(exp, group, method, dimension, "L2"))
             # plt.show()
             plt.clf()
 
@@ -265,21 +263,20 @@ def get_subgraphs_global(dict_graphs, groups_id):
     return dict_df_edges_filter
 
 def edge_embeddings_global(exp, method, groups_id, subgroups_id):
-    for group in groups_id:
-        for subgroup in subgroups_id[group]:
+    for group in tqdm(groups_id):
+        for subgroup in tqdm(subgroups_id[group]):
             # read dataset
-            df_node_embeddings = pd.read_csv("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}.csv".format(dir, exp, method, group, subgroup), index_col=0)
-            df_edges = pd.read_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, subgroup))
+            df_node_embeddings = pd.read_csv("output/{}/node_embeddings/node-embeddings_{}_{}_{}.csv".format(exp, method, group, subgroup), index_col=0)
+            df_edges = pd.read_csv("output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(exp, group, subgroup))
             
             # get edges embeddings
-            df_edge_embeddings = edge2vec_l2(df_edges, df_node_embeddings)
-            # df_edge_embeddings = p_edge2vec_l2(df_edges, df_node_embeddings)
-            df_edge_embeddings.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}.csv".format(dir, exp, method, group, subgroup), index=True)
+            df_edge_embeddings = p_edge2vec_l2(df_edges, df_node_embeddings)
+            df_edge_embeddings.to_csv("output/{}/edge_embeddings/edge-embeddings_{}_{}_{}.csv".format(exp, method, group, subgroup), index=True)
 
 def create_graph_data(exp, groups_id, subgroups_id):
     for group in tqdm(groups_id):
         for subgroup in tqdm(subgroups_id[group]):
-            df_weighted_edges = pd.read_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, group, subgroup))
+            df_weighted_edges = pd.read_csv("output/{}/preprocessing/edges/edges_{}_{}.csv".format(exp, group, subgroup))
             G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr="weight")
             mapping = dict(zip(list(G.nodes()), range(G.number_of_nodes())))
             G = nx.relabel_nodes(G, mapping)
@@ -289,12 +286,12 @@ def create_graph_data(exp, groups_id, subgroups_id):
 
             df_nodes = pd.DataFrame(degree.items(), columns=["idx", "degree"])
             df_nodes["id"] = list(mapping.keys())
-            df_nodes.to_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, group, subgroup), index=False)
+            df_nodes.to_csv("output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(exp, group, subgroup), index=False)
 
             edges = list(G.edges())
             df_edges = pd.DataFrame(edges, columns=["source", "target"])
             df_edges["weight"] = [G.get_edge_data(edge[0], edge[1])["weight"] for edge in edges]
-            df_edges.to_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, subgroup), index=False)
+            df_edges.to_csv("output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(exp, group, subgroup), index=False)
 
 def build_graph_weight_global(exp, list_groups_subgroups_t_corr, groups_id, subgroups_id, threshold=0.5):
     list_groups_subgroups_t_corr_g = []
@@ -306,9 +303,9 @@ def build_graph_weight_global(exp, list_groups_subgroups_t_corr, groups_id, subg
             df_weighted_edges = pd.DataFrame(weighted_edges, columns=["source", "target", "weight"])
             df_weighted_edges = df_weighted_edges[df_weighted_edges["weight"] != 0]
 
-            df_weighted_edges.to_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
+            df_weighted_edges.to_csv("output/{}/preprocessing/edges/edges_{}_{}.csv".format(exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
             G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr=["weight"])
-            nx.write_gexf(G, "{}/output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
+            nx.write_gexf(G, "output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(exp, groups_id[i], subgroups_id[groups_id[i]][j]))
 
             list_aux.append(df_weighted_edges)
         list_groups_subgroups_t_corr_g.append(list_aux)
@@ -329,9 +326,9 @@ def build_graph_weight_global_(exp, list_groups_subgroups_t_corr, groups_id, sub
             df_weighted_edges = df_weighted_edges[df_weighted_edges["weight"].abs() >= threshold]
             df_weighted_edges
 
-            df_weighted_edges.to_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
+            df_weighted_edges.to_csv("output/{}/preprocessing/edges/edges_{}_{}.csv".format(exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
             G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr=["weight"])
-            nx.write_gexf(G, "{}/output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
+            nx.write_gexf(G, "output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(exp, groups_id[i], subgroups_id[groups_id[i]][j]))
 
             list_aux.append(df_weighted_edges)
         list_groups_subgroups_t_corr_g.append(list_aux)
@@ -346,12 +343,12 @@ def correlation_global(exp, groups_id, subgroups_id, list_groups_subgroups_t, me
             matrix = round(matrix, 2)
             list_aux.append(matrix)
 
-            matrix.to_csv("{}/output/{}/correlations/correlations_{}_{}.csv".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=True)
+            matrix.to_csv("output/{}/correlations/correlations_{}_{}.csv".format(exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=True)
 
             """ if plot:
                 plt.imshow(matrix, cmap="bwr")
                 plt.colorbar()
-                plt.savefig("{}/output/{}/plots/correlation_{}_{}.png".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
+                plt.savefig("output/{}/plots/correlation_{}_{}.png".format(exp, groups_id[i], subgroups_id[groups_id[i]][j]))
                 # plt.show()
                 plt.clf() """
         list_groups_subgroups_t_corr.append(list_aux)
@@ -422,7 +419,7 @@ def get_edges_std(G, dir, group, subgroups, ddof):
     list_aux = df_edge_embeddings_join_filter_count_weight.iloc[:, -1].values
 
     for i in tqdm(subgroups):
-        df_edges = pd.read_csv("{}/{}/output_preprocessing/edges/{}_edges_{}.csv".format(dir, group[0], i))
+        df_edges = pd.read_csv("{}/output_preprocessing/edges/{}_edges_{}.csv".format(dir, group[0], i))
         df_edges.sort_values(["source", "target"], ascending=True, inplace=True)
         df_edges["idx"] = df_edges["source"].astype(str) + "-" + df_edges["target"].astype(str)
         
@@ -440,7 +437,7 @@ def get_edges_std(G, dir, group, subgroups, ddof):
     # Average weight
     df_edge_embeddings_join_filter_count_weight_std_avg_all = df_edge_embeddings_join_filter_count_weight_std.copy()
     df_edge_embeddings_join_filter_count_weight_std_avg_all["weight"] = df_edge_embeddings_join_filter_count_weight_std_avg_all.iloc[:, -(len(subgroups) + 1):-1].mean(axis=1)
-    # df_edge_embeddings_join_filter_count_weight_std_avg_all.to_csv("{}/{}/output_greedy/edges_filter_weight_std_avg_all/greedy_{}_edge-filter-weight-std-avg-all.csv".format(dir, group[0]), index=False)
+    # df_edge_embeddings_join_filter_count_weight_std_avg_all.to_csv("{}/output_greedy/edges_filter_weight_std_avg_all/greedy_{}_edge-filter-weight-std-avg-all.csv".format(dir, group[0]), index=False)
     df_edge_embeddings_join_filter_count_weight_std_avg_all
 
     df_edges_all = df_edge_embeddings_join_filter_count_weight_std_avg_all.iloc[:, [0, 1, -1, -2]]
@@ -498,7 +495,7 @@ def get_nodes_anova(G, dir, group):
         # df_raw_filter = df_raw_filter.join(df_temp)
         df_raw_filter = pd.concat([df_raw_filter, df_temp], axis=1)
 
-    # df_raw_filter.to_csv("{}/{}/output_greedy/matrix/greedy_{}_matrix_copy.csv".format(dir, group[0]), index=True)
+    # df_raw_filter.to_csv("{}/output_greedy/matrix/greedy_{}_matrix_copy.csv".format(dir, group[0]), index=True)
     df_raw_filter
 
     # ANOVA
@@ -701,7 +698,7 @@ def p_edge2vec_l2(df_edges, df_node_embeddings):
             data[k] = r
             index[k] = (i, j)
 
-    index = list(map(tuple, index))
+    index =list(map(tuple, index))
     index = pd.MultiIndex.from_tuples(index)
     df_edge_embeddings = pd.DataFrame(data, index=index)
     return df_edge_embeddings
@@ -709,7 +706,7 @@ def p_edge2vec_l2(df_edges, df_node_embeddings):
 def edge2vec_l2(df_edges, df_node_embeddings):
     index = []
     data = []
-    for row in tqdm(df_edges.itertuples()):
+    for row in df_edges.itertuples():
         i = row[1]
         j = row[2]
 

@@ -25,9 +25,9 @@ import sys
 
 import json
 
-def main(exp):
+def main(experiment):
     # Opening JSON file
-    file = open("{}/input/parameters_{}.json".format(dir, exp))
+    file = open("{}/input/parameters_{}.json".format(dir, experiment.id))
     params = json.load(file)
 
     exp = params["exp"]
@@ -60,8 +60,6 @@ def main(exp):
     # get edges embeddings
 
     edge_embeddings_global(exp, method, groups_id, subgroups_id_op)
-
-    df_edge_embeddings = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], subgroups_id_op[groups_id[0]][0]), index_col=[0, 1])
 
     # ### Concat edge embeddings
     for group in tqdm(groups_id):
@@ -190,8 +188,6 @@ def main(exp):
         # set new index
         df_edge_embeddings_concat_filter.set_index([pd.Index(list_index)], inplace=True)
 
-    df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
-
     # format id
     if option:
         for group in tqdm(groups_id):
@@ -206,16 +202,12 @@ def main(exp):
             df_edge_embeddings_concat_filter.set_index([pd.Index(list_index)], inplace=True)
             df_edge_embeddings_concat_filter
 
-    df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
-
     # filter diferente edges
     if option:
         for group in tqdm(groups_id):
             df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
             df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter[df_edge_embeddings_concat_filter.index.get_level_values(0) != df_edge_embeddings_concat_filter.index.get_level_values(1)]
             dict_df_edge_embeddings_concat_filter[group] = df_edge_embeddings_concat_filter
-
-    df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
 
     # count edges and filter by count
     dict_df_edges_filter = {}
@@ -240,26 +232,16 @@ def main(exp):
         df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter.iloc[:, [0, 1]]
         dict_df_edges_filter[group] = df_edge_embeddings_concat_filter
 
-    df_edges_filter = dict_df_edges_filter[groups_id[0]]
-
     # change data type
     for group in tqdm(groups_id):
         df_edges_filter = dict_df_edges_filter[group]
         df_edges_filter[["source", "target"]] = df_edges_filter[["source", "target"]].astype("string")
 
-    df_edges_filter = dict_df_edges_filter[groups_id[0]]
-
     # get weight by subgroups
     dict_df_edges_filter_weight = get_weight_global(dict_df_edges_filter, exp, groups_id, subgroups_id)
-    df_edges_filter_weight = dict_df_edges_filter_weight[groups_id[0]]
-
-    df_edges_filter_weight = dict_df_edges_filter_weight[groups_id[0]]
 
     # ### Filter by STD and average weight
     dict_df_common_edges = std_global(dict_df_edges_filter_weight, exp, method, groups_id, option, th=0.3, plot=True, save=True)
-
-    df_common_edges = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option),
-                                dtype={"source": "string", "target": "string"})
 
     # show details
     """ for group in tqdm(groups_id):
