@@ -65,5 +65,8 @@ def main(experiment):
 
     end = time.time()
     elapsed_time = round((end - start) / 60, 2)
+
+    experiment.run_time = elapsed_time
+    experiment.save()
     print(elapsed_time)
     print("End")

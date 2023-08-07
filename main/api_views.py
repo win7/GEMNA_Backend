@@ -164,15 +164,30 @@ class ExperimentConsult(APIView):
                 dir = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_p-value_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
                                                                                                              experiment.method, group.replace("-", "_"), experiment.data_variation)
                 df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
-                df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
                 print(df_change_filter)
+                # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
+                # print(df_change_filter)
                 
-                H = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
+                H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
                 HF = H.subgraph(nodes)
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
 
                 # edge_labels = nx.get_edge_attributes(HF, "label")
-                data = df_change_filter_sub.to_dict(orient="records")
+                # print(df_change_filter.to_dict(orient="list"))
+                df_change_filter_temp = df_change_filter.iloc[:1000,:]
+
+                all_nodes = pd.unique(pd.concat([df_change_filter_temp['source'], df_change_filter_temp['target']]))
+                matrix = pd.DataFrame(0, index=all_nodes, columns=all_nodes)
+
+                # Fill the matrix with 1 where there are edges
+                for _, row in df_change_filter_temp.iterrows():
+                    matrix.loc[row['source'], row['target']] = row['weight1'] - row['weight2']
+                    matrix.loc[row['target'], row['source']] = row['weight2'] - row['weight1']
+
+                data = {
+                    "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
+                    "changes_sub": df_change_filter_sub.to_dict(orient="records")
+                }
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
                 print(str(e))
