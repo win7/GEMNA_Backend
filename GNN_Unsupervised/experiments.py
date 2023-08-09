@@ -8,6 +8,9 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.conf import settings
 
+from main.models import Experiment
+from main.serializers import ExperimentSerializer
+
 import format_input as fi
 import preprocessing as pp
 import node_embeddings_dgi as dgi
@@ -66,7 +69,8 @@ def main(experiment):
     end = time.time()
     elapsed_time = round((end - start) / 60, 2)
 
-    experiment.run_time = elapsed_time
+    # experiment = Experiment.objects.get(pk=experiment.id)
+    experiment.runtime = elapsed_time
     experiment.save()
     print(elapsed_time)
     print("End")

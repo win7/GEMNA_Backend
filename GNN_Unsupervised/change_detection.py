@@ -116,8 +116,8 @@ def main(experiment):
 
                 # ### Differences between correlations
                 # option 1
-                n1 = len(df_change)
-                n2 = len(df_change)
+                n1 = len(df_change) - df_change["weight1"].isna().sum() # len(df_change)
+                n2 = len(df_change) - df_change["weight2"].isna().sum() # len(df_change)
 
                 z1 = fisher_transform(df_change["weight1"])
                 z2 = fisher_transform(df_change["weight2"])

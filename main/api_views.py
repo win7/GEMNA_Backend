@@ -164,17 +164,20 @@ class ExperimentConsult(APIView):
                 dir = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_p-value_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
                                                                                                              experiment.method, group.replace("-", "_"), experiment.data_variation)
                 df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
-                print(df_change_filter)
-                # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
                 # print(df_change_filter)
+                # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
+                print(df_change_filter.iloc[:20,:])
                 
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
                 HF = H.subgraph(nodes)
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
 
+                degrees = sorted(H.degree, key=lambda x: x[1], reverse=True) # {node:val for (node, val) in H.degree()}
+                # print(degrees)
+
                 # edge_labels = nx.get_edge_attributes(HF, "label")
                 # print(df_change_filter.to_dict(orient="list"))
-                df_change_filter_temp = df_change_filter.iloc[:1000,:]
+                df_change_filter_temp = df_change_filter.iloc[:500, :]
 
                 all_nodes = pd.unique(pd.concat([df_change_filter_temp['source'], df_change_filter_temp['target']]))
                 matrix = pd.DataFrame(0, index=all_nodes, columns=all_nodes)
@@ -186,7 +189,8 @@ class ExperimentConsult(APIView):
 
                 data = {
                     "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
-                    "changes_sub": df_change_filter_sub.to_dict(orient="records")
+                    "changes_sub": df_change_filter_sub.to_dict(orient="records"),
+                    "degrees": degrees
                 }
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
