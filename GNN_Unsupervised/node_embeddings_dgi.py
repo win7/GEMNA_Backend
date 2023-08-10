@@ -246,7 +246,7 @@ def main(experiment):
     parser.add_argument(
         "--dropout", type=float, default=0.0, help="dropout probability"
     )
-    parser.add_argument("--gpu", type=int, default=0, help="gpu")
+    parser.add_argument("--gpu", type=int, default=1, help="gpu")
     parser.add_argument(
         "--dgi-lr", type=float, default=1e-3, help="dgi learning rate"
     )
