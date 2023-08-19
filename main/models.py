@@ -32,9 +32,13 @@ class Experiment(models.Model):
 	raw_data = models.FileField("Raw data", upload_to='GNN_Unsupervised/raw_data/', blank=False, null=False)
 	control = models.CharField("control", max_length=64)
 	range = models.IntegerField("Range", default=0)
+	alpha = models.FloatField("Alpha", default=0.05)
+	silhouette = models.FloatField("Silhouette score", default=0.0)
 	runtime = models.IntegerField("Runtime", default=0)
 	email = models.EmailField("Email", blank=False, null=False)
+	transformation = models.CharField("Transfomation", max_length=5, blank=False, null=False)
 	detail = models.TextField("Details", max_length=100, blank=True, null=True)
+	
 	# profile_id = models.OneToOneField(Profile, on_delete=models.CASCADE, verbose_name="Perfil", blank=True, null=True)
 
 	class Meta:

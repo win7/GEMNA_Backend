@@ -47,7 +47,10 @@ def main(experiment):
 
     # ### Generate graphs
     # logarithm
-    df_join_raw_log = log10_global(df_join_raw)
+    if experiment.transformation == "true":
+        df_join_raw_log = log10_global(df_join_raw)
+    else:
+        df_join_raw_log = df_join_raw.copy()
 
     # split graph in groups and subgroups
     list_df_groups_subgroups = split_groups_subgroups(df_join_raw_log, groups_id, subgroups_id)

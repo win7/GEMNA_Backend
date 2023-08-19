@@ -71,9 +71,6 @@ def main(experiment):
     groups_id = params["groups_id"]
     print("Group id:\t", groups_id)
 
-    subgroups_id = params["subgroups_id"]
-    print("Subgroups id:\t", subgroups_id)
-
     option = params["option"]
     print("Option:\t\t", option)
 
@@ -86,8 +83,6 @@ def main(experiment):
             if item1 != item2:
                 groups = [item1, item2] # change
                 print("Groups:\t\t", groups)
-                subgroups = {groups[0]: subgroups_id[groups[0]], groups[1]: subgroups_id[groups[1]]}
-                print("Subgroups:\t", subgroups)
 
                 # ### Changes detection
 
@@ -105,78 +100,23 @@ def main(experiment):
                 # #### Compose
                 R = nx.compose(list_graphs[0], list_graphs[1])
 
-                """ labels = []
+                labels = []
                 for edge in R.edges():
                     weights = R.get_edge_data(*edge)
                     label = get_label(weights)
                     labels.append(label)
-                nx.set_edge_attributes(R, {(u, v): {"label": get_label(ed, th=0.8)} for u, v, ed in R.edges.data()}) """
+
+                nx.set_edge_attributes(R, {(u, v): {"label": get_label(ed, th=0.8)} for u, v, ed in R.edges.data()})
 
                 df_change = nx.to_pandas_edgelist(R)
-                df_change = df_change[["source", "target", "weight1", "weight2"]] # , "label"]]
+                df_change = df_change[["source", "target", "weight1", "weight2", "label"]]
 
                 # df_change = df_change.fillna(0)
                 # df_change
 
-                # ### Filter by ANOVA
-                df_change = df_change.dropna()
-                df_edges_filter = df_change.iloc[:, [0, 1]]
-
-                dict_df_edges_filter = {
-                    groups[0]: df_edges_filter,
-                    groups[1]: df_edges_filter
-                }
-
-                dict_df_edges_filter_weight = get_weight_global(dict_df_edges_filter, exp, groups, subgroups)
-
-                df_edges_filter_weight1 = dict_df_edges_filter_weight[groups[0]] # .iloc[:, 2:]
-                df_edges_filter_weight2 = dict_df_edges_filter_weight[groups[1]] # .iloc[:, 2:]
-
-                df_raw_filter = pd.concat([df_edges_filter_weight1, df_edges_filter_weight2.iloc[:, 2:]], axis=1)
-                df_raw_filter.columns = ["source", "target"] + [groups[0]] * (len(df_edges_filter_weight1.columns) - 2) + [groups[1]] * (len(df_edges_filter_weight2.columns) - 2)
-
-                # ANOVA
-                p_values = anova_(df_raw_filter.iloc[:, 2:])
-                df_raw_filter["p-value"] = p_values
-                # print(df_raw_filter["p-value"].isna().sum())
-
-                df_raw_filter_anova = df_raw_filter[df_raw_filter["p-value"] < 0.05]
-
-                # average
-                df_change_filter = df_raw_filter_anova.iloc[:, [0, 1]]
-
-                for k, group in tqdm(enumerate(groups)):
-                    df_edges_filter_weight = df_raw_filter_anova[group]
-                    
-                    list_avg = []
-                    for row in tqdm(df_edges_filter_weight.itertuples()):
-                        # print(row[1:])
-                        norm_dist = pd.DataFrame(row[1:])
-                        # print(norm_dist)
-
-                        norm_dist.columns = ["weight"]
-                        # print(norm_dist)
-                        bin_count = int(np.ceil(np.log2(len(norm_dist))) + 1)
-                        norm_dist["cluster"] = pd.cut(norm_dist.stack().values, bins=bin_count) # , labels=range(bin_count))
-                        norm_dist['frequency'] = norm_dist.groupby('cluster')['cluster'].transform('count')
-                        norm_dist["mult"] = norm_dist.apply(lambda x: x.weight * x.frequency, axis=1)
-
-                        average = norm_dist["mult"].sum() / norm_dist["frequency"].sum()
-                        list_avg.append(average)
-                    # df_edges_filter_weight["weight"] = list_avg
-                    # df_change_filter["weight{}".format(k + 1)] = list_avg
-                    df_change_filter.insert(len(df_change_filter.columns), "weight{}".format(k + 1), list_avg)
-
-                labels = []
-                for row in tqdm(df_change_filter.itertuples()):
-                    weights = row[3:]
-                    label = get_label(weights)
-                    labels.append(label)
-                df_change_filter.insert(len(df_change_filter.columns), "label", labels)
-
                 # ### Differences between correlations
                 # option 1
-                """ n1 = len(df_change) - df_change["weight1"].isna().sum() # len(df_change)
+                n1 = len(df_change) - df_change["weight1"].isna().sum() # len(df_change)
                 n2 = len(df_change) - df_change["weight2"].isna().sum() # len(df_change)
 
                 z1 = fisher_transform(df_change["weight1"])
@@ -200,31 +140,31 @@ def main(experiment):
 
                 # df_temp = count_values(df_change["p-value"])
 
-                "" " try:
+                """ try:
                     x = df_change["p-value"]
                     hist(x, th=0.05)
                 except:
-                    pass "" "
+                    pass """
 
                 # filter by p-value
                 df_change_filter = df_change.copy() # df_change[df_change["p-value"] < 0.05]
 
-                "" " try:
+                """ try:
                     x = df_change_filter["p-value"]
                     hist(x, th=0.05)
                 except:
-                    pass "" "
+                    pass """
 
-                "" " df_temp = count_values(df_change_filter["label"])
+                """ df_temp = count_values(df_change_filter["label"])
                 print(df_temp["count"].sum())
-                df_temp "" "
+                df_temp """
 
-                "" " df_temp = count_values(df_change_filter["p-value"])
+                """ df_temp = count_values(df_change_filter["p-value"])
                 print(df_temp["count"].sum())
                 df_temp """
 
                 # #### Mapping Aligment ID to Average Mz
-                df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)        
+                """ df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)        
                 df_join_raw.index = df_join_raw.index.astype("str")
 
                 dict_aux = df_join_raw.iloc[:, :2].to_dict(orient='dict')
@@ -239,11 +179,8 @@ def main(experiment):
                 # dict_metabolite
 
                 # mapping
-                df_change_filter.insert(len(df_change_filter.columns), "source1",df_change_filter["source"].map(dict_mz))
-                df_change_filter.insert(len(df_change_filter.columns), "target1",df_change_filter["target"].map(dict_mz))
-
-                df_change_filter.insert(len(df_change_filter.columns), "source2",df_change_filter["source"].map(dict_metabolite))
-                df_change_filter.insert(len(df_change_filter.columns), "target2",df_change_filter["target"].map(dict_metabolite))
+                df_change_filter["source"] = df_change_filter["source"].map(dict_mz)
+                df_change_filter["target"] = df_change_filter["target"].map(dict_mz) """
 
                 # save
                 df_change_filter.to_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option), index=False)

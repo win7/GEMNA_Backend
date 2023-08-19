@@ -81,12 +81,12 @@ def main (experiment):
 
                 # set operation
                 dict_set_operation = {}
-                for group in groups:
+                """ for group in groups:
                     dict_nodes_aux = dict_nodes.copy()
                     nodes_aux = dict_nodes_aux.pop(group)
                     unique_nodes = nodes_aux - set.union(*list(dict_nodes_aux.values()))
 
-                    dict_set_operation[group] = unique_nodes
+                    dict_set_operation[group] = unique_nodes """
 
                 dict_set_operation["-".join(groups)] = set.intersection(*list(dict_nodes.values()))
 
@@ -119,13 +119,18 @@ def main (experiment):
                         # df_biocyc["log-{}".format(group)] = np.log10(df_aux.mean(axis=1).values)
                         list_data.append(df_aux.mean(axis=1).values)
 
-                    df_biocyc["before"] = np.log10(list_data[0])
-                    df_biocyc["after"] = np.log10(list_data[1])
-                    df_biocyc["ratio"] = np.log10(np.divide(list_data[1], list_data[0]))
+                    if experiment.transformation == "true":
+                        df_biocyc["before"] = np.log10(list_data[0])
+                        df_biocyc["after"] = np.log10(list_data[1])
+                        df_biocyc["ratio"] = np.log10(np.divide(list_data[1], list_data[0]))
+                    else:
+                        df_biocyc["before"] = list_data[0]
+                        df_biocyc["after"] = list_data[1]
+                        df_biocyc["ratio"] = np.divide(list_data[1], list_data[0])
 
                     # df_biocyc["metabolities"] = df_metadata.loc[common_nodes]["Metabolites - Approved by Nicola"].values
-                    df_biocyc.insert(1, "metabolities", df_join_raw.loc[nodes]["Metabolite name"].values)
-                    df_biocyc = df_biocyc.iloc[:, 1:]
+                    # df_biocyc.insert(1, "metabolities", df_join_raw.loc[nodes]["Metabolite name"].values)
+                    # df_biocyc = df_biocyc.iloc[:, 1:]
 
                     # save
                     df_biocyc.to_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(dir, exp, method, key, option), 

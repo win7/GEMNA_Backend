@@ -38,6 +38,29 @@ cpu_count = os.cpu_count()
 
 dir = os.getcwd() + "/GNN_Unsupervised"
 
+def anova_(df_raw_filter):
+    columns = np.unique(list(df_raw_filter.columns))
+    print(columns)
+    p_values = []
+
+    for i in range(len(df_raw_filter)):
+        row = df_raw_filter.iloc[i, :]
+        # print(row)
+        # print("1---")
+        list_global = []
+        for column in columns:
+            # print(row[column])
+            try:
+                list_global.append(row[column].to_list())
+            except:
+                list_global.append([row[column]])
+        # print("2---")
+        # print(list_global)
+        fvalue, pvalue = stats.f_oneway(*list_global)
+
+        p_values.append(pvalue)
+    return p_values
+
 def sort_df_edges(df_edges):
     s = []
     t = []
@@ -88,8 +111,8 @@ def create_graph_data_other(exp, groups_id, subgroups_id, option):
         df_edges.to_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, option), index=False)
 
 def get_label(weights, th=0.8):
-    w1 = weights.get("weight1")
-    w2 = weights.get("weight2")
+    w1 = weights[0] # weights.get("weight1")
+    w2 = weights[1] # weights.get("weight2")
 
     l1 = "?"
     l2 = "?"

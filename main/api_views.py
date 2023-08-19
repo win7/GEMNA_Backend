@@ -51,6 +51,7 @@ class ExperimentList(APIView):
         serializer = ExperimentSerializer(data=request.data)
         if serializer.is_valid():
             data = serializer.save()
+            # data = Experiment.objects.get(pk="e6609b8a-f965-4ff8-b07d-b37a8c1c6291")
 
             # run experiment
             t1 = Process(target=exper.main, args=(data,))
@@ -89,17 +90,18 @@ class ExperimentDetail(APIView):
                 files = os.listdir(dir_path)
 
                 details = []
-                nodes = []
+                nodes = {}
                 for item in files:
                     aux = item.split("_")
                     name = "{}-{}".format(aux[4], aux[5])
+                    print(name)
                     dir = "{}/GNN_Unsupervised/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
                     df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
-                    # print(df_change_filter)
-                    df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
-
-                    graph = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
-                    nodes += list(graph.nodes())
+                    print(df_change_filter)
+                    # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
+                    print()
+                    graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
+                    # nodes += list(graph.nodes())
 
                     labels = []
                     for label in values:
@@ -115,7 +117,13 @@ class ExperimentDetail(APIView):
                         "labels": labels
                     }
                     details.append(aux_data)
-                nodes = np.unique(nodes)
+
+                    nodes[name] = {
+                        "id": np.sort(np.unique(df_change_filter.iloc[:, [0, 1]].values.flatten())),
+                        "mz":np.sort(np.unique(df_change_filter.iloc[:, [5, 6]].values.flatten())),
+                        "name": np.sort(np.unique(df_change_filter.iloc[:, [7, 8]].values.flatten()))
+                    }
+                # nodes = np.unique(nodes)
                 data = {
                     "details": details,
                     "nodes": nodes
@@ -161,23 +169,24 @@ class ExperimentConsult(APIView):
 
                 experiment = Experiment.objects.get(pk=pk)
 
-                dir = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_p-value_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
+                dir1 = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_p-value_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
                                                                                                              experiment.method, group.replace("-", "_"), experiment.data_variation)
-                df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
-                # print(df_change_filter)
+                df_change_filter = pd.read_csv(dir1, dtype={"source": "string", "target": "string",
+                                                            "source1": "string", "target1": "string"})
+                print(df_change_filter)
                 # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
-                print(df_change_filter.iloc[:20,:])
+                # print(df_change_filter.iloc[:20,:])
                 
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
                 HF = H.subgraph(nodes)
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
 
-                degrees = sorted(H.degree, key=lambda x: x[1], reverse=True) # {node:val for (node, val) in H.degree()}
+                degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
                 # print(degrees)
 
                 # edge_labels = nx.get_edge_attributes(HF, "label")
                 # print(df_change_filter.to_dict(orient="list"))
-                df_change_filter_temp = df_change_filter.iloc[:500, :]
+                """ df_change_filter_temp = df_change_filter.iloc[:500, :]
 
                 all_nodes = pd.unique(pd.concat([df_change_filter_temp['source'], df_change_filter_temp['target']]))
                 matrix = pd.DataFrame(0, index=all_nodes, columns=all_nodes)
@@ -185,11 +194,20 @@ class ExperimentConsult(APIView):
                 # Fill the matrix with 1 where there are edges
                 for _, row in df_change_filter_temp.iterrows():
                     matrix.loc[row['source'], row['target']] = row['weight1'] - row['weight2']
-                    matrix.loc[row['target'], row['source']] = row['weight2'] - row['weight1']
+                    matrix.loc[row['target'], row['source']] = row['weight2'] - row['weight1'] """
+
+                dir2 = "{}/GNN_Unsupervised/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
+                                                                                                             experiment.method, group, experiment.data_variation)
+                df_biocyc = pd.read_csv(dir2, delimiter="\t", names=["ID", "Before", "After", "Ratio"])
+                df_biocyc = df_biocyc.iloc[:, :3]
+                df_biocyc.sort_values(by=["ID"], inplace=True)
+                # print(df_biocyc)
+                # print(df_biocyc.info())
 
                 data = {
-                    "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
+                    # "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
                     "changes_sub": df_change_filter_sub.to_dict(orient="records"),
+                    "biocyc": df_biocyc.to_dict(orient="records"),
                     "degrees": degrees
                 }
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()

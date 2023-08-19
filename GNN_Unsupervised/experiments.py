@@ -45,7 +45,7 @@ def main(experiment):
     print("\nProcessing")
     pg.main(experiment)
 
-    print("\nChange detection")
+    print("\nChange detection") 
     cd.main(experiment)
 
     print("\nProcessing biocyc")
