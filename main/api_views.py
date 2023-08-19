@@ -51,7 +51,7 @@ class ExperimentList(APIView):
         serializer = ExperimentSerializer(data=request.data)
         if serializer.is_valid():
             data = serializer.save()
-            # data = Experiment.objects.get(pk="e6609b8a-f965-4ff8-b07d-b37a8c1c6291")
+            # data = Experiment.objects.get(pk="f02f05f8-bdce-4511-a746-a1e680da9e19")
 
             # run experiment
             t1 = Process(target=exper.main, args=(data,))
@@ -183,11 +183,12 @@ class ExperimentConsult(APIView):
                     "name": [7, 8, 4]
                 }
                 # print(df_change_filter.iloc[:, key_subgraph[type]])
-                print(list(df_change_filter.iloc[:, key_subgraph[type][:2]].columns))
+                # print(list(df_change_filter.iloc[:, key_subgraph[type]]))
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, key_subgraph[type]], *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
                                             edge_attr=["label"], create_using=nx.DiGraph())
                 HF = H.subgraph(nodes)
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
+                print(df_change_filter_sub)
 
                 degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
                 # print(degrees)
@@ -205,11 +206,13 @@ class ExperimentConsult(APIView):
                     matrix.loc[row['target'], row['source']] = row['weight2'] - row['weight1'] """
 
                 dir2 = "{}/GNN_Unsupervised/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
-                                                                                                             experiment.method, group, experiment.data_variation)
-                df_biocyc = pd.read_csv(dir2, delimiter="\t", names=["ID", "Before", "After", "Ratio"])
-                df_biocyc = df_biocyc.iloc[:, :3]
-                df_biocyc.sort_values(by=["ID"], inplace=True)
+                                                                                         experiment.method, group, experiment.data_variation)
+                df_biocyc = pd.read_csv(dir2, delimiter="\t", names=["name", "mz", "id", "Before", "After", "Ratio"])
                 # print(df_biocyc)
+                df_biocyc = df_biocyc.loc[:, [type, "Before", "After"]]
+                df_biocyc.sort_values(by=[type], inplace=True)
+                df_biocyc.columns = ["ID", "Before", "After"]
+                print(df_biocyc)
                 # print(df_biocyc.info())
 
                 data = {

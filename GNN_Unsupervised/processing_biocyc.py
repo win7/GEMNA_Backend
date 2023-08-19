@@ -108,7 +108,7 @@ def main (experiment):
                     nodes = dict_set_operation[key]
 
                     df_biocyc = pd.DataFrame()
-                    df_biocyc["m/z"] = nodes
+                    df_biocyc["Alignment ID"] = nodes
 
                     list_data = []
                     for group in groups:
@@ -129,7 +129,8 @@ def main (experiment):
                         df_biocyc["ratio"] = np.divide(list_data[1], list_data[0])
 
                     # df_biocyc["metabolities"] = df_metadata.loc[common_nodes]["Metabolites - Approved by Nicola"].values
-                    # df_biocyc.insert(1, "metabolities", df_join_raw.loc[nodes]["Metabolite name"].values)
+                    df_biocyc.insert(0, "Average Mz", df_join_raw.loc[nodes]["Average Mz"].values)
+                    df_biocyc.insert(0, "Metabolite name", df_join_raw.loc[nodes]["Metabolite name"].values)
                     # df_biocyc = df_biocyc.iloc[:, 1:]
 
                     # save
