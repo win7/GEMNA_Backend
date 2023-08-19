@@ -99,7 +99,6 @@ class ExperimentDetail(APIView):
                     df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
                     print(df_change_filter)
                     # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
-                    print()
                     graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
                     # nodes += list(graph.nodes())
 
@@ -166,6 +165,7 @@ class ExperimentConsult(APIView):
                 pk = request.data["id"]
                 group = request.data["group"]
                 nodes = request.data["nodes"]
+                type = request.data["type"]
 
                 experiment = Experiment.objects.get(pk=pk)
 
@@ -176,8 +176,16 @@ class ExperimentConsult(APIView):
                 print(df_change_filter)
                 # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
                 # print(df_change_filter.iloc[:20,:])
-                
-                H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
+
+                key_subgraph = {
+                    "id": [0, 1, 4],
+                    "mz": [5, 6, 4],
+                    "name": [7, 8, 4]
+                }
+                # print(df_change_filter.iloc[:, key_subgraph[type]])
+                print(list(df_change_filter.iloc[:, key_subgraph[type][:2]].columns))
+                H = nx.from_pandas_edgelist(df_change_filter.iloc[:, key_subgraph[type]], *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
+                                            edge_attr=["label"], create_using=nx.DiGraph())
                 HF = H.subgraph(nodes)
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
 
