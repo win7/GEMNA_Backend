@@ -202,7 +202,7 @@ class ExperimentConsult(APIView):
 
                 # print(df_change_filter.iloc[:, key_subgraph[type]])
                 # print(list(df_change_filter.iloc[:, key_subgraph[type]]))
-                H = nx.from_pandas_edgelist(df_change_filter.iloc[:, key_subgraph[type]], *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
+                H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", # *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
                                             edge_attr=["label"], create_using=nx.DiGraph())
                 HF = H.subgraph(nodes) # H.subgraph(nodes) or H # graph or subgraph
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
