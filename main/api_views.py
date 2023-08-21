@@ -104,7 +104,7 @@ class ExperimentDetail(APIView):
                     print(name)
                     dir = "{}/GNN_Unsupervised/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
                     df_change_filter = pd.read_csv(dir) # , dtype={"source": "string", "target": "string"})
-                    # print(df_change_filter)
+                    print(df_change_filter)
                     # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
                     graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
                     # nodes += list(graph.nodes())
@@ -191,11 +191,11 @@ class ExperimentConsult(APIView):
                 # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
                 # print(df_change_filter.iloc[:20,:])
 
-                key_subgraph = {
+                """ key_subgraph = {
                     "id": [0, 1, 4],
                     "mz": [5, 6, 4],
                     "name": [7, 8, 4]
-                }
+                } """
 
                 # res = df_change_filter[df_change_filter.isin(nodes)]
                 # print(res)
@@ -209,6 +209,7 @@ class ExperimentConsult(APIView):
                 # print(df_change_filter_sub)
 
                 degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
+                # degrees = H.degree
                 # print(degrees)
 
                 # edge_labels = nx.get_edge_attributes(HF, "label")
@@ -226,11 +227,12 @@ class ExperimentConsult(APIView):
                 dir2 = "{}/GNN_Unsupervised/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
                                                                                          experiment.method, group, experiment.data_variation)
                 df_biocyc = pd.read_csv(dir2, delimiter="\t", names=["name", "mz", "id", "Before", "After", "Ratio"])
-                # print(df_biocyc)
+                # print(df_biocyc.info())
+                df_biocyc.sort_values(by=["id"], inplace=True) # sort_values(by=[type], inplace=True)
+                print(df_biocyc)
                 df_biocyc = df_biocyc.loc[:, [type, "Before", "After"]]
-                df_biocyc.sort_values(by=[type], inplace=True)
                 df_biocyc.columns = ["ID", "Before", "After"]
-                # print(df_biocyc)
+                print(df_biocyc)
                 # print(df_biocyc.info())
 
                 data = {

@@ -48,7 +48,7 @@ def anova_(df_raw_filter):
         # print(row)
         # print("1---")
         list_global = []
-        for column in columns:
+        for column in tqdm(columns):
             # print(row[column])
             try:
                 list_global.append(row[column].to_list())
