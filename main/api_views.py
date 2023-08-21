@@ -91,13 +91,20 @@ class ExperimentDetail(APIView):
 
                 details = []
                 nodes = {}
+
+                # load data
+                df_join_raw = pd.read_csv("{}/GNN_Unsupervised/input/{}_raw.csv".format(os.getcwd(), experiment.id), index_col=0, usecols=[0, 1, 2])        
+                # df_join_raw.index = df_join_raw.index.astype("str")
+                df_join_raw.columns = ["mz", "name"]
+                # print(df_join_raw.head(10))
+
                 for item in files:
                     aux = item.split("_")
                     name = "{}-{}".format(aux[4], aux[5])
                     print(name)
                     dir = "{}/GNN_Unsupervised/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
-                    df_change_filter = pd.read_csv(dir, dtype={"source": "string", "target": "string"})
-                    print(df_change_filter)
+                    df_change_filter = pd.read_csv(dir) # , dtype={"source": "string", "target": "string"})
+                    # print(df_change_filter)
                     # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
                     graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
                     # nodes += list(graph.nodes())
@@ -116,17 +123,24 @@ class ExperimentDetail(APIView):
                         "labels": labels
                     }
                     details.append(aux_data)
+                    
+                    ids = np.unique(df_change_filter.iloc[:, [0, 1]].values.flatten())
 
-                    nodes[name] = {
-                        "id": np.sort(np.unique(df_change_filter.iloc[:, [0, 1]].values.flatten())),
-                        "mz":np.sort(np.unique(df_change_filter.iloc[:, [5, 6]].values.flatten())),
-                        "name": np.sort(np.unique(df_change_filter.iloc[:, [7, 8]].values.flatten()))
-                    }
+                    df_nodes = df_join_raw.loc[ids] # ["Average Mz", "Metabolite name"]
+                    df_nodes.insert(0, "id", df_nodes.index)
+                    print(df_nodes)
+                    nodes[name] = df_nodes.to_dict(orient="records"), 
+                    """ {
+                        "id": df_change_filter.iloc[:, [0, 1]].values.flatten(),
+                        "mz": df_change_filter.iloc[:, [5, 6]].values.flatten(),
+                        "name": df_change_filter.iloc[:, [7, 8]].values.flatten()
+                    } """
                 # nodes = np.unique(nodes)
                 data = {
                     "details": details,
                     "nodes": nodes
                 }
+
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
                 print(str(e))
@@ -182,13 +196,17 @@ class ExperimentConsult(APIView):
                     "mz": [5, 6, 4],
                     "name": [7, 8, 4]
                 }
+
+                # res = df_change_filter[df_change_filter.isin(nodes)]
+                # print(res)
+
                 # print(df_change_filter.iloc[:, key_subgraph[type]])
                 # print(list(df_change_filter.iloc[:, key_subgraph[type]]))
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, key_subgraph[type]], *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
                                             edge_attr=["label"], create_using=nx.DiGraph())
-                HF = H.subgraph(nodes)
+                HF = H.subgraph(nodes) # H.subgraph(nodes) or H # graph or subgraph
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
-                print(df_change_filter_sub)
+                # print(df_change_filter_sub)
 
                 degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
                 # print(degrees)
@@ -212,7 +230,7 @@ class ExperimentConsult(APIView):
                 df_biocyc = df_biocyc.loc[:, [type, "Before", "After"]]
                 df_biocyc.sort_values(by=[type], inplace=True)
                 df_biocyc.columns = ["ID", "Before", "After"]
-                print(df_biocyc)
+                # print(df_biocyc)
                 # print(df_biocyc.info())
 
                 data = {
