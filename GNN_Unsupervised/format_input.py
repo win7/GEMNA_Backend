@@ -39,6 +39,12 @@ def main(experiment):
     # df1.drop_duplicates(subset=["Id"], keep="last", inplace=True)
 
     # ### Format dataset
+    # has transformation
+    columns_data = list(df_raw.columns)[3:]
+    if experiment.transformation == "true":
+        for column in columns_data:
+            df_raw[column] = df_raw[column].apply(lambda x: 10**x)
+
     # concat
     df_join_raw = pd.concat([
         df_raw.iloc[:, :]], axis=1)
@@ -78,7 +84,9 @@ def main(experiment):
         "subgroups_id": subgroups_id,
         "option": experiment.data_variation,
         "control": experiment.control,
-        "range": experiment.range
+        "range": experiment.range,
+        "transformation": experiment.transformation,
+        "alpha": experiment.alpha
     }
 
     with open("{}/input/parameters_{}.json".format(dir, experiment.id), "w") as outfile:

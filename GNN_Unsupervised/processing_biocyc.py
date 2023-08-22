@@ -119,14 +119,9 @@ def main (experiment):
                         # df_biocyc["log-{}".format(group)] = np.log10(df_aux.mean(axis=1).values)
                         list_data.append(df_aux.mean(axis=1).values)
 
-                    if experiment.transformation == "true":
-                        df_biocyc["before"] = np.log10(list_data[0])
-                        df_biocyc["after"] = np.log10(list_data[1])
-                        df_biocyc["ratio"] = np.log10(np.divide(list_data[1], list_data[0]))
-                    else:
-                        df_biocyc["before"] = list_data[0]
-                        df_biocyc["after"] = list_data[1]
-                        df_biocyc["ratio"] = np.divide(list_data[1], list_data[0])
+                    df_biocyc["before"] = np.log10(list_data[0])
+                    df_biocyc["after"] = np.log10(list_data[1])
+                    df_biocyc["ratio"] = np.log10(np.divide(list_data[1], list_data[0]))
 
                     # df_biocyc["metabolities"] = df_metadata.loc[common_nodes]["Metabolites - Approved by Nicola"].values
                     df_biocyc.insert(0, "Average Mz", df_join_raw.loc[nodes]["Average Mz"].values)

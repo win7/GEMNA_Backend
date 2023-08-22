@@ -415,7 +415,8 @@ def transpose_global(list_groups_subgroups):
 def log10_global(df_join_raw):
     df_join_raw_log = df_join_raw.copy()
     for column in df_join_raw.columns:
-        df_join_raw_log[column] = np.log10(df_join_raw[column], where=df_join_raw[column]>0)
+        #df_join_raw_log[column] = np.log10(df_join_raw[column], where=df_join_raw[column]>0)
+        df_join_raw[column] = df_join_raw[column].replace(np.nan, df_join_raw[column].min() / 100)
     return df_join_raw_log
 
 def get_edges_std(G, dir, group, subgroups, ddof):

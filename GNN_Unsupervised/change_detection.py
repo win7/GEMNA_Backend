@@ -68,6 +68,9 @@ def main(experiment):
     method = params["method"]
     print("Method:\t\t", method)
 
+    alpha = params["alpha"]
+    print("Alpha:\t\t", alpha)
+
     groups_id = params["groups_id"]
     print("Group id:\t", groups_id)
 
@@ -140,7 +143,7 @@ def main(experiment):
                 df_raw_filter["p-value"] = p_values
                 # print(df_raw_filter["p-value"].isna().sum())
 
-                df_raw_filter_anova = df_raw_filter[df_raw_filter["p-value"] < 0.05]
+                df_raw_filter_anova = df_raw_filter[df_raw_filter["p-value"] < alpha]
 
                 # average
                 df_change_filter = df_raw_filter_anova.iloc[:, [0, 1]]

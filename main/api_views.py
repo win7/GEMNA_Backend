@@ -46,7 +46,7 @@ class ExperimentList(APIView):
         return Resp(data=serializer.data, message="Experiments Successfully Recovered.").send()
 
     def post(self, request, format=None):
-        # print(request.data)
+        print(request.data)
 
         serializer = ExperimentSerializer(data=request.data)
         if serializer.is_valid():
@@ -58,7 +58,7 @@ class ExperimentList(APIView):
             """ t1 = threading.Thread(target=exper.main, args=(str(data.id), data.raw_data, data.method,
                                                            data.data_variation, data.dimension, data.email)) """
             # starting threads
-            t1.start()
+            # t1.start()
             # wait until all threads finish
             # t1.join()
 
