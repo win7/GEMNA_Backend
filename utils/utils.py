@@ -43,12 +43,12 @@ def anova_(df_raw_filter):
     print(columns)
     p_values = []
 
-    for i in range(len(df_raw_filter)):
+    for i in tqdm(range(len(df_raw_filter))):
         row = df_raw_filter.iloc[i, :]
         # print(row)
         # print("1---")
         list_global = []
-        for column in tqdm(columns):
+        for column in columns:
             # print(row[column])
             try:
                 list_global.append(row[column].to_list())
