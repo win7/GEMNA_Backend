@@ -237,11 +237,33 @@ def main(experiment):
         df_edges_filter = dict_df_edges_filter[group]
         df_edges_filter[["source", "target"]] = df_edges_filter[["source", "target"]].astype("string")
 
+    # save source, target, and syntetic weight
+    # dict_df_edges_filter_weight = {}
+    for group in tqdm(groups_id):
+        df_edges_filter_weight = dict_df_edges_filter[group].copy()
+
+        s = []
+        t = []
+        for row in df_edges_filter_weight.itertuples():
+            if row[1] > row[2]:
+                s.append(row[2])
+                t.append(row[1])
+            else:
+                s.append(row[1])
+                t.append(row[2])
+        df_edges_filter_weight["source"] = s
+        df_edges_filter_weight["target"] = t
+        df_edges_filter_weight["weight"] = [1] * len(df_edges_filter_weight)
+
+        df_edges_filter_weight.sort_values(["source", "target"], ascending=True, inplace=True)
+        # dict_df_edges_filter_weight[group] = df_edges_filter_weight
+        df_edges_filter_weight.to_csv("output/{}/common_edges/common_edges_{}_{}_{}.csv".format(exp, method, group, option), index=False)
+
     # get weight by subgroups
-    dict_df_edges_filter_weight = get_weight_global(dict_df_edges_filter, exp, groups_id, subgroups_id)
+    # dict_df_edges_filter_weight = get_weight_global(dict_df_edges_filter, exp, groups_id, subgroups_id)
 
     # ### Filter by STD and average weight
-    dict_df_common_edges = std_global(dict_df_edges_filter_weight, exp, method, groups_id, option, th=0.3, plot=True, save=True)
+    # dict_df_common_edges = std_global(dict_df_edges_filter_weight, exp, method, groups_id, option, th=0.3, plot=True, save=True)
 
     # show details
     """ for group in tqdm(groups_id):

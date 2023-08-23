@@ -66,7 +66,7 @@ def main (experiment):
                 # ### BioCyc
                 # get filter graphs
 
-                dict_graphs = {}
+                """1 dict_graphs = {}
 
                 for group in groups:
                     df_common_edges = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, group, option),
@@ -81,12 +81,12 @@ def main (experiment):
 
                 # set operation
                 dict_set_operation = {}
-                """ for group in groups:
+                "" " for group in groups:
                     dict_nodes_aux = dict_nodes.copy()
                     nodes_aux = dict_nodes_aux.pop(group)
                     unique_nodes = nodes_aux - set.union(*list(dict_nodes_aux.values()))
 
-                    dict_set_operation[group] = unique_nodes """
+                    dict_set_operation[group] = unique_nodes "" "
 
                 dict_set_operation["-".join(groups)] = set.intersection(*list(dict_nodes.values()))
 
@@ -134,7 +134,7 @@ def main (experiment):
                     # df_biocyc.head()
 
                 # mapping metabolite name with ratio (3)
-                """ for key, value in dict_set_operation.items():
+                "" " for key, value in dict_set_operation.items():
                     nodes = dict_set_operation[key]
 
                     df_biocyc = pd.DataFrame()
@@ -155,6 +155,37 @@ def main (experiment):
                     # save
                     df_biocyc.to_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(dir, exp, methods[0], key, options[0]), 
                                     index=False, header=False, sep="\t")
-                    # df_biocyc.head() """
+                    # df_biocyc.head() "" " """
 
-                # df_biocyc = pd.read_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(dir, exp, method, "-".join(groups), option), sep="\t")
+                # get common nodes from change detection result
+                df_change_filter = pd.read_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option),
+                                                dtype={"source": "string", "target": "string"})
+
+                G = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1]])
+                nodes = list(G.nodes())
+
+                # mapping metabolite name with ratio (2)
+                df_biocyc = pd.DataFrame()
+                df_biocyc["Alignment ID"] = nodes
+
+                list_data = []
+                for group in groups:
+                    df_aux = df_join_raw.filter(like=group)
+                    df_aux = df_aux.loc[nodes]
+
+                    # df_biocyc["mean-{}".format(group)] = df_aux.mean(axis=1).values
+                    # df_biocyc["log-{}".format(group)] = np.log10(df_aux.mean(axis=1).values)
+                    list_data.append(df_aux.mean(axis=1).values)
+
+                df_biocyc["before"] = np.log10(list_data[0])
+                df_biocyc["after"] = np.log10(list_data[1])
+                df_biocyc["ratio"] = np.log10(np.divide(list_data[1], list_data[0]))
+
+                # df_biocyc["metabolities"] = df_metadata.loc[common_nodes]["Metabolites - Approved by Nicola"].values
+                df_biocyc.insert(0, "Average Mz", df_join_raw.loc[nodes]["Average Mz"].values)
+                df_biocyc.insert(0, "Metabolite name", df_join_raw.loc[nodes]["Metabolite name"].values)         
+                # df_biocyc = df_biocyc.iloc[:, 1:]
+
+                # save
+                df_biocyc.to_csv("output/{}/biocyc/biocyc_{}_{}_{}.csv".format(exp, method, "-".join(groups), option), 
+                                 index=False, header=False, sep="\t")

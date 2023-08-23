@@ -184,9 +184,11 @@ class ExperimentConsult(APIView):
                 experiment = Experiment.objects.get(pk=pk)
 
                 dir1 = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_p-value_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
-                                                                                                             experiment.method, group.replace("-", "_"), experiment.data_variation)
+                                                                                                         experiment.method, group.replace("-", "_"), experiment.data_variation)
                 df_change_filter = pd.read_csv(dir1, dtype={"source": "string", "target": "string",
                                                             "source1": "string", "target1": "string"})
+                # df_change_filter = pd.read_csv(dir1)
+            
                 print(df_change_filter)
                 # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
                 # print(df_change_filter.iloc[:20,:])
@@ -208,8 +210,9 @@ class ExperimentConsult(APIView):
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
                 # print(df_change_filter_sub)
 
-                degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
-                # degrees = H.degree
+                # degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
+                degrees = np.array([[int(node), val] for (node, val) in H.degree()])
+                degrees = degrees[degrees[:, 0].argsort()]
                 # print(degrees)
 
                 # edge_labels = nx.get_edge_attributes(HF, "label")
