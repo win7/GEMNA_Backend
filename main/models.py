@@ -33,6 +33,7 @@ class Experiment(models.Model):
 	control = models.CharField("control", max_length=64)
 	range = models.IntegerField("Range", default=0)
 	alpha = models.FloatField("Alpha", default=0.05)
+	threshold = models.FloatField("Threshold", default=0.5)
 	silhouette = models.FloatField("Silhouette score", default=0.0)
 	runtime = models.IntegerField("Runtime", default=0)
 	email = models.EmailField("Email", blank=False, null=False)

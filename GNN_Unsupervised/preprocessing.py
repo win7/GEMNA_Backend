@@ -38,7 +38,7 @@ def main(experiment):
     print("Subgroups id:\t", subgroups_id)
 
     option = params["option"]
-    print("Option:\t", option)
+    print("Option:\t\t", option)
 
     threshold = params["threshold"]
     print("Threshold:\t", threshold)
@@ -63,7 +63,7 @@ def main(experiment):
 
     # build graph
     # list_groups_subgroups_t_corr_g = build_graph_weight_global(exp, list_groups_subgroups_t_corr, groups_id, subgroups_id, threshold=0.5)
-    list_groups_subgroups_t_corr_g = build_graph_weight_global_(exp, list_groups_subgroups_t_corr, groups_id, subgroups_id, threshold=0.5)
+    list_groups_subgroups_t_corr_g = build_graph_weight_global_(exp, list_groups_subgroups_t_corr, groups_id, subgroups_id, threshold=threshold)
 
     # create dataset - nodes/edge data for DGL framework
     if option == "none":

@@ -98,8 +98,8 @@ def create_graph_data_other(exp, groups_id, subgroups_id, option):
         df_edges.to_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, option), index=False)
 
 def get_label(weights, th=0.8):
-    w1 = weights[0] # weights.get("weight1")
-    w2 = weights[1] # weights.get("weight2")
+    w1 = weights.get("weight1") # weights[0] # weights.get("weight1")
+    w2 = weights.get("weight2") # weights[1] # weights.get("weight2")
 
     l1 = "?"
     l2 = "?"
@@ -284,7 +284,7 @@ def edge_embeddings_global(exp, method, groups_id, subgroups_id):
             # get edges embeddings
             df_edge_embeddings = edge2vec_l2(df_edges, df_node_embeddings)
             # df_edge_embeddings = p_edge2vec_l2(df_edges, df_node_embeddings)
-            df_edge_embeddings.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}.csv".format(dir, exp, method, group, subgroup), index=True)
+            df_edge_embeddings.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}.csv".format(dir, exp, method, group, subgroup), index=False)
 
 def create_graph_data(exp, groups_id, subgroups_id):
     for group in tqdm(groups_id):
@@ -746,7 +746,6 @@ def edge2vec_l2(df_edges, df_node_embeddings):
         target.append(j)
         data.append(r)
 
-    data = np.array()
     # index = pd.MultiIndex.from_tuples(index)
     df_edge_embeddings = pd.DataFrame(data)
     df_edge_embeddings.insert(0, "source", source)

@@ -71,7 +71,7 @@ def main(experiment):
             df_edge_embeddings_concat = pd.concat([df_edge_embeddings_concat, df_edge_embeddings])
             k += 1
         
-        df_edge_embeddings_concat.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option))
+        df_edge_embeddings_concat.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
 
     df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option))
 
