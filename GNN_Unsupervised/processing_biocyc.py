@@ -59,9 +59,9 @@ def main (experiment):
                 print("Groups:\t\t", groups)
 
                 # ### Load data
-                # load dataset groups
+                # load raw data
                 df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)        
-                df_join_raw.index = df_join_raw.index.astype("str")
+                # df_join_raw.index = df_join_raw.index.astype("str")
 
                 # ### BioCyc
                 # get filter graphs
@@ -158,8 +158,7 @@ def main (experiment):
                     # df_biocyc.head() "" " """
 
                 # get common nodes from change detection result
-                df_change_filter = pd.read_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option),
-                                                dtype={"source": "string", "target": "string"})
+                df_change_filter = pd.read_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option))
 
                 G = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1]])
                 nodes = list(G.nodes())
@@ -187,5 +186,5 @@ def main (experiment):
                 # df_biocyc = df_biocyc.iloc[:, 1:]
 
                 # save
-                df_biocyc.to_csv("output/{}/biocyc/biocyc_{}_{}_{}.csv".format(exp, method, "-".join(groups), option), 
+                df_biocyc.to_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(dir, exp, method, "-".join(groups), option), 
                                  index=False, header=False, sep="\t")

@@ -86,7 +86,8 @@ def main(experiment):
         "control": experiment.control,
         "range": experiment.range,
         "transformation": experiment.transformation,
-        "alpha": experiment.alpha
+        "alpha": experiment.alpha,
+        "threshold": experiment.threshold
     }
 
     with open("{}/input/parameters_{}.json".format(dir, experiment.id), "w") as outfile:

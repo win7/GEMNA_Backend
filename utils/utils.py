@@ -60,19 +60,6 @@ def anova_(df_raw_filter):
 
         p_values.append(pvalue)
     return p_values
-
-def sort_df_edges(df_edges):
-    s = []
-    t = []
-    for row in df_edges.itertuples():
-        if row[1] > row[2]:
-            s.append(row[2])
-            t.append(row[1])
-        else:
-            s.append(row[1])
-            t.append(row[2])
-    df_edges["source"] = s
-    df_edges["target"] = t
     
 def create_graph_data_other(exp, groups_id, subgroups_id, option):
     for group in tqdm(groups_id):
@@ -350,11 +337,10 @@ def build_graph_weight_global_(exp, list_groups_subgroups_t_corr, groups_id, sub
             df_weighted_edges.reset_index(inplace=True)
             df_weighted_edges.columns = ["source", "target", "weight"]
             df_weighted_edges = df_weighted_edges[df_weighted_edges["weight"].abs() >= threshold]
-            df_weighted_edges
 
             df_weighted_edges.to_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
-            G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr=["weight"])
-            nx.write_gexf(G, "{}/output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
+            # G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr=["weight"])
+            # nx.write_gexf(G, "{}/output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
 
             list_aux.append(df_weighted_edges)
         list_groups_subgroups_t_corr_g.append(list_aux)
@@ -415,8 +401,9 @@ def transpose_global(list_groups_subgroups):
 def log10_global(df_join_raw):
     df_join_raw_log = df_join_raw.copy()
     for column in df_join_raw.columns:
-        #df_join_raw_log[column] = np.log10(df_join_raw[column], where=df_join_raw[column]>0)
-        df_join_raw[column] = df_join_raw[column].replace(np.nan, df_join_raw[column].min() / 100)
+        # df_join_raw_log[column] = np.log10(df_join_raw[column], where=df_join_raw[column]>0)
+        df_join_raw_log[column] = np.log10(df_join_raw_log[column])
+        df_join_raw_log[column] = df_join_raw_log[column].replace(np.nan, df_join_raw_log[column].min() / 100)
     return df_join_raw_log
 
 def get_edges_std(G, dir, group, subgroups, ddof):
@@ -673,6 +660,19 @@ def correlation_labels(df_subgraphs, threshold=0.8):
     changes_labels = np.select(conditions, values)
     return changes_labels
 
+def sort_df_edges(df_edges):
+    s = []
+    t = []
+    for row in df_edges.itertuples():
+        if row[1] > row[2]:
+            s.append(row[2])
+            t.append(row[1])
+        else:
+            s.append(row[1])
+            t.append(row[2])
+    df_edges["source"] = s
+    df_edges["target"] = t
+
 def sort_edges(edges):
     edges = list(edges)
     for k in range(len(edges)):
@@ -731,7 +731,8 @@ def p_edge2vec_l2(df_edges, df_node_embeddings):
     return df_edge_embeddings
 
 def edge2vec_l2(df_edges, df_node_embeddings):
-    index = []
+    source = []
+    target = []
     data = []
     for row in tqdm(df_edges.itertuples()):
         i = row[1]
@@ -741,11 +742,15 @@ def edge2vec_l2(df_edges, df_node_embeddings):
         v = df_node_embeddings.loc[j].values
         r = (u - v) ** 2
         
-        index.append((i, j))
+        source.append(i)
+        target.append(j)
         data.append(r)
 
-    index = pd.MultiIndex.from_tuples(index)
-    df_edge_embeddings = pd.DataFrame(data, index=index)
+    data = np.array()
+    # index = pd.MultiIndex.from_tuples(index)
+    df_edge_embeddings = pd.DataFrame(data)
+    df_edge_embeddings.insert(0, "source", source)
+    df_edge_embeddings.insert(1, "target", target)
     return df_edge_embeddings
 
 def edge2vec_l2_v2(df_edges, df_node_embeddings):

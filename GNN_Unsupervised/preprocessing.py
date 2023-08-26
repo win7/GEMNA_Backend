@@ -40,6 +40,9 @@ def main(experiment):
     option = params["option"]
     print("Option:\t", option)
 
+    threshold = params["threshold"]
+    print("Threshold:\t", threshold)
+
     # ### Load dataset
     # load dataset groups
     df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)

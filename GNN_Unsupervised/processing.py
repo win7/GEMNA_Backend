@@ -66,14 +66,14 @@ def main(experiment):
         df_edge_embeddings_concat = pd.DataFrame()
         k = 0
         for subgroup in tqdm(subgroups_id_op[group]):
-            df_edge_embeddings = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}.csv".format(dir, exp, method, group, subgroup), index_col=[0, 1])
+            df_edge_embeddings = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}.csv".format(dir, exp, method, group, subgroup))
             df_edge_embeddings["subgroup"] = [k] * len(df_edge_embeddings)
             df_edge_embeddings_concat = pd.concat([df_edge_embeddings_concat, df_edge_embeddings])
             k += 1
         
-        df_edge_embeddings_concat.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option), index=True)
+        df_edge_embeddings_concat.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option))
 
-    df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option), index_col=[0, 1])
+    df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option))
 
     # plot edge embeddings concat
     """ for group in tqdm(groups_id):
@@ -118,9 +118,9 @@ def main(experiment):
     dict_df_edge_embeddings_concat_filter = {}
 
     for group in tqdm(groups_id):
-        df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option), index_col=[0, 1])
+        df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option))
 
-        X_train = df_edge_embeddings_concat.iloc[:, :-1]
+        X_train = df_edge_embeddings_concat.iloc[:, 2:-1]
 
         clf = ECOD()
         clf.fit(X_train)
@@ -131,7 +131,7 @@ def main(experiment):
         df_edge_embeddings_concat_filter["labels"] = clf.labels_
 
         # save
-        df_edge_embeddings_concat_filter.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_outlier_{}_{}_{}.csv".format(dir, exp, method, group, option), index=True)
+        df_edge_embeddings_concat_filter.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_outlier_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
         
         df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter[df_edge_embeddings_concat_filter["labels"] == 0]
         df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter.iloc[:, :-1]
@@ -139,7 +139,7 @@ def main(experiment):
         # dict_df_edge_embeddings_concat_outlier[group] = X_train
         dict_df_edge_embeddings_concat_filter[group] = df_edge_embeddings_concat_filter
 
-    df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
+    # df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[groups_id[0]]
 
     # plot outliers/inliers
     """ for group in tqdm(groups_id):
@@ -171,42 +171,28 @@ def main(experiment):
     # ###  Filter common edges
     # mapping idx with id
     for group in tqdm(groups_id):
-        dict_df_nodes = {}
         for subgroup in subgroups_id_op[group]:
-            df_nodes = pd.read_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, group, subgroup),
-                                dtype={"id": "string"})
-            dict_df_nodes[subgroup] = df_nodes
+            df_nodes = pd.read_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, group, subgroup))
+            dict_id = dict(zip(df_nodes["idx"], df_nodes["id"]))
         
-        # mapping
-        df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
-        list_index = []
-        
-        for row in tqdm(df_edge_embeddings_concat_filter.itertuples()):
-            df_nodes = dict_df_nodes[subgroups_id_op[group][row[-1]]]
-            list_index.append((df_nodes.iloc[row[0][0], -1], df_nodes.iloc[row[0][1], -1]))
-        
-        # set new index
-        df_edge_embeddings_concat_filter.set_index([pd.Index(list_index)], inplace=True)
+            # mapping
+            df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
+            df_edge_embeddings_concat_filter["source"] = df_edge_embeddings_concat_filter["source"].map(dict_id)
+            df_edge_embeddings_concat_filter["target"] = df_edge_embeddings_concat_filter["target"].map(dict_id)
 
     # format id
     if option:
         for group in tqdm(groups_id):
             # format
             df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
-            list_index = []
-
-            for row in tqdm(df_edge_embeddings_concat_filter.itertuples()):
-                list_index.append((row[0][0][1:], row[0][1][1:]))
-            
-            # set new index
-            df_edge_embeddings_concat_filter.set_index([pd.Index(list_index)], inplace=True)
-            df_edge_embeddings_concat_filter
+            df_edge_embeddings_concat_filter["source"] = df_edge_embeddings_concat_filter["source"].map(lambda x: int(x[1:]))
+            df_edge_embeddings_concat_filter["target"] = df_edge_embeddings_concat_filter["target"].map(lambda x: int(x[1:]))
 
     # filter diferente edges
     if option:
         for group in tqdm(groups_id):
             df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
-            df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter[df_edge_embeddings_concat_filter.index.get_level_values(0) != df_edge_embeddings_concat_filter.index.get_level_values(1)]
+            df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter[df_edge_embeddings_concat_filter["source"] != df_edge_embeddings_concat_filter["target"]]
             dict_df_edge_embeddings_concat_filter[group] = df_edge_embeddings_concat_filter
 
     # count edges and filter by count
@@ -214,11 +200,6 @@ def main(experiment):
     for group in tqdm(groups_id):
         # read
         df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
-
-        # format
-        df_edge_embeddings_concat_filter.reset_index(inplace=True)
-        df_edge_embeddings_concat_filter.rename(columns={"level_0": "source", "level_1": "target"}, inplace=True)
-        df_edge_embeddings_concat_filter[["source", "target"]] = df_edge_embeddings_concat_filter[["source", "target"]].astype("string")
         
         # sort edges
         sort_df_edges(df_edge_embeddings_concat_filter)
@@ -232,32 +213,41 @@ def main(experiment):
         df_edge_embeddings_concat_filter = df_edge_embeddings_concat_filter.iloc[:, [0, 1]]
         dict_df_edges_filter[group] = df_edge_embeddings_concat_filter
 
-    # change data type
+    # ### New correlation
+    # read raw data
+    df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)
+    # df_join_raw.index = df_join_raw.index.astype("str")
+    df_join_raw = df_join_raw.iloc[:, 2:]
+
+    # log10
+    df_join_raw_log = log10_global(df_join_raw)
+
+    # correlation
+    dict_df_corr = {}
     for group in tqdm(groups_id):
+        # graph filter
         df_edges_filter = dict_df_edges_filter[group]
-        df_edges_filter[["source", "target"]] = df_edges_filter[["source", "target"]].astype("string")
+        G = nx.from_pandas_edgelist(df_edges_filter.iloc[:, [0, 1]])
+        nodes = list(G.nodes())
+        
+        df_join_raw_filter = df_join_raw_log.loc[nodes, :]
+        # df_join_raw_filter = df_join_raw_filter.filter(regex=group, axis=1)
+        df_join_raw_filter = df_join_raw_filter.filter(like=group, axis=1)
+
+        df_join_raw_filter_t= df_join_raw_filter.T
+        df_join_raw_filter_corr = df_join_raw_filter_t.corr(method="pearson")
+        dict_df_corr[group] = df_join_raw_filter_corr
 
     # save source, target, and syntetic weight
     # dict_df_edges_filter_weight = {}
     for group in tqdm(groups_id):
         df_edges_filter_weight = dict_df_edges_filter[group].copy()
+        df_corr = dict_df_corr[group]
 
-        s = []
-        t = []
-        for row in df_edges_filter_weight.itertuples():
-            if row[1] > row[2]:
-                s.append(row[2])
-                t.append(row[1])
-            else:
-                s.append(row[1])
-                t.append(row[2])
-        df_edges_filter_weight["source"] = s
-        df_edges_filter_weight["target"] = t
-        df_edges_filter_weight["weight"] = [1] * len(df_edges_filter_weight)
-
+        df_edges_filter_weight["weight"] = df_edges_filter_weight.apply(lambda x: df_corr.loc[x["source"], x["target"]], axis=1)
         df_edges_filter_weight.sort_values(["source", "target"], ascending=True, inplace=True)
         # dict_df_edges_filter_weight[group] = df_edges_filter_weight
-        df_edges_filter_weight.to_csv("output/{}/common_edges/common_edges_{}_{}_{}.csv".format(exp, method, group, option), index=False)
+        df_edges_filter_weight.to_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
 
     # get weight by subgroups
     # dict_df_edges_filter_weight = get_weight_global(dict_df_edges_filter, exp, groups_id, subgroups_id)
