@@ -127,11 +127,6 @@ def main(experiment):
                 ztest = diff / sezdiff
 
                 p_value = 2 * (1 - scipy.stats.norm.cdf(np.abs(ztest), loc=0, scale=1))
-
-                # df_change["z1"] = z1
-                # df_change["z2"] = z2
-                # df_change["diff"] = diff
-                # df_change["ztest"] = ztest
                 df_change["p-value"] = p_value
 
                 # filter by p-value

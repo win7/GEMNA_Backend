@@ -58,7 +58,7 @@ class ExperimentList(APIView):
             """ t1 = threading.Thread(target=exper.main, args=(str(data.id), data.raw_data, data.method,
                                                            data.data_variation, data.dimension, data.email)) """
             # starting threads
-            t1.start()
+            # t1.start()
             # wait until all threads finish
             # t1.join()
 

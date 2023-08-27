@@ -48,6 +48,9 @@ def main(experiment):
     option = params["option"]
     print("Option:\t\t", option)
 
+    threshold = params["threshold"]
+    print("Threshold:\t", threshold)
+
     if option:
         subgroups_id_op = {}
         for group in groups_id:
@@ -188,7 +191,7 @@ def main(experiment):
             df_edge_embeddings_concat_filter["source"] = df_edge_embeddings_concat_filter["source"].map(lambda x: int(x[1:]))
             df_edge_embeddings_concat_filter["target"] = df_edge_embeddings_concat_filter["target"].map(lambda x: int(x[1:]))
 
-    # filter diferente edges
+    # filter by different edges
     if option:
         for group in tqdm(groups_id):
             df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
@@ -238,17 +241,23 @@ def main(experiment):
         df_join_raw_filter_corr = df_join_raw_filter_t.corr(method="pearson")
         dict_df_corr[group] = df_join_raw_filter_corr
 
-    # save source, target, and syntetic weight
-    # dict_df_edges_filter_weight = {}
+    # get new correlation
+    dict_df_edges_filter_weight = {}
     for group in tqdm(groups_id):
         df_edges_filter_weight = dict_df_edges_filter[group].copy()
         df_corr = dict_df_corr[group]
 
         df_edges_filter_weight["weight"] = df_edges_filter_weight.apply(lambda x: df_corr.loc[x["source"], x["target"]], axis=1)
         df_edges_filter_weight.sort_values(["source", "target"], ascending=True, inplace=True)
-        # dict_df_edges_filter_weight[group] = df_edges_filter_weight
-        df_edges_filter_weight.to_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
+        dict_df_edges_filter_weight[group] = df_edges_filter_weight
+        # df_edges_filter_weight.to_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
 
+    # filter by abs(weight) >= threshold
+    for group in tqdm(groups_id):
+        df_edges_filter_weight = dict_df_edges_filter_weight[group]
+        df_edges_filter_weight_filter = df_edges_filter_weight[df_edges_filter_weight["weight"].abs() >= threshold]
+        df_edges_filter_weight_filter.to_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
+        
     # get weight by subgroups
     # dict_df_edges_filter_weight = get_weight_global(dict_df_edges_filter, exp, groups_id, subgroups_id)
 
