@@ -132,6 +132,9 @@ def main(experiment):
                 # filter by p-value
                 df_change_filter = df_change[df_change["p-value"] < alpha]
 
+                # significant label
+                df_change_filter["significant"] = df_change_filter["label"].map(lambda x: x[0] != x[1])
+
                 # #### Mapping Aligment ID to Average Mz
                 dict_aux = df_join_raw.iloc[:, :2].to_dict(orient='dict')
                 # dict_aux
