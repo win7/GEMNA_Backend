@@ -158,7 +158,7 @@ def main (experiment):
                     # df_biocyc.head() "" " """
 
                 # get common nodes from change detection result
-                df_change_filter = pd.read_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option))
+                df_change_filter = pd.read_csv("{}/output/{}/changes/changes_edges_log2_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option))
 
                 G = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1]])
                 nodes = list(G.nodes())

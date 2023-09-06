@@ -212,7 +212,7 @@ def main(experiment):
                 df_change_filter.insert(len(df_change_filter.columns), "target2", df_change_filter["target"].map(dict_metabolite))
 
                 # save
-                df_change_filter.to_csv("{}/output/{}/changes/changes_edges_p-value_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option), index=False)
+                df_change_filter.to_csv("{}/output/{}/changes/changes_edges_log2_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option), index=False)
 
                 """ H = nx.from_pandas_edgelist(df_change_filter, "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
                 # H.edges(data=True)
