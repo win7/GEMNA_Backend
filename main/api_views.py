@@ -99,6 +99,8 @@ class ExperimentDetail(APIView):
                 # print(df_join_raw.head(10))
 
                 for item in files:
+                    if "significant" in item:
+                        continue
                     aux = item.split("_")
                     name = "{}-{}".format(aux[4], aux[5])
                     print(name)
@@ -106,7 +108,7 @@ class ExperimentDetail(APIView):
                     df_change_filter = pd.read_csv(dir) # , dtype={"source": "string", "target": "string"})
                     print(df_change_filter)
                     # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
-                    graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
+                    graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
                     # nodes += list(graph.nodes())
 
                     labels = []
@@ -183,7 +185,7 @@ class ExperimentConsult(APIView):
 
                 experiment = Experiment.objects.get(pk=pk)
 
-                dir1 = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_p-value_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
+                dir1 = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_log2_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
                                                                                                          experiment.method, group.replace("-", "_"), experiment.data_variation)
                 df_change_filter = pd.read_csv(dir1, dtype={"source": "string", "target": "string",
                                                             "source1": "string", "target1": "string"})
@@ -204,7 +206,7 @@ class ExperimentConsult(APIView):
 
                 # print(df_change_filter.iloc[:, key_subgraph[type]])
                 # print(list(df_change_filter.iloc[:, key_subgraph[type]]))
-                H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 4]], "source", "target", # *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
+                H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", # *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
                                             edge_attr=["label"], create_using=nx.DiGraph())
                 HF = H.subgraph(nodes) # H.subgraph(nodes) or H # graph or subgraph
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)

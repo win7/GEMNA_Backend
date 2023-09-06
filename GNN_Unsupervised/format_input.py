@@ -87,7 +87,7 @@ def main(experiment):
         "range": experiment.range,
         "transformation": experiment.transformation,
         "alpha": experiment.alpha,
-        "threshold": experiment.threshold,
+        "threshold": experiment.threshold_corr,
         "threshold_log2": experiment.threshold_log2
     }
 
