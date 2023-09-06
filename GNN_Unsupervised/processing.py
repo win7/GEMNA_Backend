@@ -15,7 +15,7 @@ from sklearn.model_selection import RandomizedSearchCV
 from tqdm import tqdm
 # from utils.utils import *
 
-import hdbscan
+# import hdbscan
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -76,7 +76,7 @@ def main(experiment):
         
         df_edge_embeddings_concat.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
 
-    df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option))
+    # df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}.csv".format(dir, exp, method, groups_id[0], option))
 
     # plot edge embeddings concat
     """ for group in tqdm(groups_id):
@@ -117,6 +117,7 @@ def main(experiment):
     inliers """
 
     # outlier detection (ECOD)
+
     # dict_df_edge_embeddings_concat_outlier = {}
     dict_df_edge_embeddings_concat_filter = {}
 
@@ -174,14 +175,22 @@ def main(experiment):
     # ###  Filter common edges
     # mapping idx with id
     for group in tqdm(groups_id):
+        df_aux = pd.DataFrame(())
+        k = 0
         for subgroup in subgroups_id_op[group]:
             df_nodes = pd.read_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, group, subgroup))
             dict_id = dict(zip(df_nodes["idx"], df_nodes["id"]))
         
             # mapping
             df_edge_embeddings_concat_filter = dict_df_edge_embeddings_concat_filter[group]
-            df_edge_embeddings_concat_filter["source"] = df_edge_embeddings_concat_filter["source"].map(dict_id)
-            df_edge_embeddings_concat_filter["target"] = df_edge_embeddings_concat_filter["target"].map(dict_id)
+            df_edge_embeddings_concat_filter_aux = df_edge_embeddings_concat_filter[df_edge_embeddings_concat_filter["subgroup"] == k]
+        
+            # print(df_edge_embeddings_concat_filter)
+            df_edge_embeddings_concat_filter_aux["source"] = df_edge_embeddings_concat_filter_aux["source"].map(dict_id)
+            df_edge_embeddings_concat_filter_aux["target"] = df_edge_embeddings_concat_filter_aux["target"].map(dict_id)
+            df_aux = pd.concat([df_aux, df_edge_embeddings_concat_filter_aux])
+            k += 1
+        dict_df_edge_embeddings_concat_filter[group] = df_aux
 
     # format id
     if option:

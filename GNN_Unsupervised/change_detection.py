@@ -24,7 +24,8 @@ def count_values(df_column):
     df_count = df_column.value_counts().to_frame().reset_index()
     df_count.loc[len(df_count)] = ["NaN", df_column.isna().sum()]
     df_count.columns = ["value", "count"]
-    return df_count
+    print("Sum", df_count["count"].sum())
+    print(df_count)
 
 def fisher_transform(r):
     # z = 0.5 * (np.log(1 + r) - np.log(1 - r))
@@ -35,12 +36,17 @@ def hist(x, th):
     # x = df_change["p_value"]
     plt.hist(x, bins=100)
     plt.axvline(x=th, color="red", lw=1)
+    plt.axvline(x=0.5, color="red", lw=1)
     # l = len(df_change) - len(df_change)
     # t = len(df_change)
     # plt.title("Loss: {} of {} ({}%)".format(l, t, round(l*100/t)))
-    # plt.savefig("{}/output/{}/plots/common_edges_std_{}_{}_{}.png".format(dir, exp, method, group, option))
+    # plt.savefig("output/{}/plots/common_edges_std_{}_{}_{}.png".format(exp, method, group, option))
     plt.show()
     # plt.clf()
+
+def filter_df_change_ID(df_change_filter, ID):
+    df_change_filter_temp = df_change_filter[(df_change_filter["source"] == ID) | (df_change_filter["target"] == ID)]
+    return df_change_filter_temp
 
 def main(experiment):
     # ### Parameters
@@ -71,6 +77,9 @@ def main(experiment):
     controls = control.split(",")
     print("Controls:\t", controls)
 
+    threshold_log2 = params["threshold_log2"]
+    print("Threshold log2:\t", threshold_log2)
+
     for item1 in controls:
         for item2 in groups_id:
             if item1 != item2:
@@ -98,11 +107,11 @@ def main(experiment):
                 # #### Compose
                 R = nx.compose(list_graphs[0], list_graphs[1])
 
-                labels = []
+                """ labels = []
                 for edge in R.edges():
                     weights = R.get_edge_data(*edge)
                     label = get_label(weights)
-                    labels.append(label)
+                    labels.append(label) """
                 nx.set_edge_attributes(R, {(u, v): {"label": get_label(ed, th=0.8)} for u, v, ed in R.edges.data()})
 
                 df_change = nx.to_pandas_edgelist(R)
@@ -112,7 +121,10 @@ def main(experiment):
                 # df_change
 
                 # ### Differeces between correlations
-                # option 1
+                df_change.insert(3, "N1", [len(df_join_raw.filter(like=groups[0]).columns)] * len(df_change))
+                df_change.insert(5, "N2", [len(df_join_raw.filter(like=groups[1]).columns)] * len(df_change))
+
+                # differences between correlations
                 n1 = len(df_join_raw.filter(like=groups[0]).columns) # len(df_change) - df_change["weight1"].isna().sum() # len(df_change)
                 n2 = len(df_join_raw.filter(like=groups[1]).columns) # len(df_change) - df_change["weight2"].isna().sum() # len(df_change)
                 print(n1, n2)
@@ -129,13 +141,59 @@ def main(experiment):
                 p_value = 2 * (1 - scipy.stats.norm.cdf(np.abs(ztest), loc=0, scale=1))
                 df_change["p-value"] = p_value
 
-                # filter by p-value
-                df_change_filter = df_change[df_change["p-value"] < alpha]
+                # get sigtnificant
+                list_significant = []
+                for row in df_change.itertuples():
+                    # print(row[3], row[5], row[8])
+                    if abs(row[3] - row[5]) > 0.1 and row[8] < alpha:
+                        list_significant.append("change")
+                    elif abs(row[3] - row[5]) < 0.1 and row[8] > 0.5:
+                        list_significant.append("stable")
+                    elif np.isnan(row[3]) or np.isnan(row[5]):
+                        list_significant.append("change*")
+                    else:
+                        list_significant.append("none")
 
-                # significant label
-                df_change_filter["significant"] = df_change_filter["label"].map(lambda x: x[0] != x[1])
+                # len(list_significant)
+                df_change["significant"] = list_significant
+
+                # filter by significant
+                # df_change_filter = df_change[df_change["p-value"] < alpha]
+                df_change_filter1 = df_change[df_change["significant"] != "none"]
+
+                # save
+                df_change_filter1.to_csv("{}/output/{}/changes/changes_edges_significant_{}_{}_{}_{}.csv".format(dir, exp, method, groups[0], groups[1], option), index=False)
+
+                # common subgraph
+                G = nx.from_pandas_edgelist(df_change_filter1.iloc[:, [0, 1]])
+
+                # filter raw data by common nodes
+                nodes_common = sorted(list(G.nodes()))
+                df_join_raw_filter = df_join_raw.loc[nodes_common]
+
+                df_join_raw_filter_log2 = np.log2(df_join_raw_filter.filter(like=groups[1]).mean(axis=1) / df_join_raw_filter.filter(like=groups[0]).mean(axis=1))
+                df_join_raw_filter_log2 = df_join_raw_filter_log2.to_frame()
+                df_join_raw_filter_log2.columns = ["log2"]
+
+                # filter by log2
+                df_join_raw_filter_log2_filter = df_join_raw_filter_log2[((df_join_raw_filter_log2["log2"] > threshold_log2) | (df_join_raw_filter_log2["log2"] < -threshold_log2))]
+                nodes_log2 = list(df_join_raw_filter_log2_filter.index)
+
+                log2 = []
+                for row in df_change_filter1.itertuples():
+                    if row[1] in nodes_log2 and row[2] in nodes_log2:
+                        log2.append(True)
+                    else:
+                        log2.append(False)
+
+                df_change_filter1["log2"] = log2
+
+                df_change_filter2 = df_change_filter1[df_change_filter1["log2"] == True]
+                df_change_filter2 = df_change_filter2.iloc[:, :-1]
 
                 # #### Mapping Aligment ID to Average Mz
+                df_change_filter = df_change_filter2.copy() # df_change_filter1, df_change_filter2
+
                 dict_aux = df_join_raw.iloc[:, :2].to_dict(orient='dict')
                 # dict_aux
 
