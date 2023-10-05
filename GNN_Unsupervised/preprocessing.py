@@ -6,7 +6,7 @@ dir = os.getcwd() + "/GNN_Unsupervised"
 sys.path.append(dir)
 
 from tqdm import tqdm
-from utils.utils import *
+from utils.utils_v1 import *
 
 import networkx as nx
 import numpy as np

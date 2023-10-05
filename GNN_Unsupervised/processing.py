@@ -6,7 +6,7 @@ dir = os.getcwd() + "/GNN_Unsupervised"
 sys.path.append(dir)
 
 from tqdm import tqdm
-from utils.utils import *
+from utils.utils_v1 import *
 
 from pyod.models.ecod import ECOD
 from mpl_toolkits import mplot3d

@@ -13,6 +13,10 @@ from dgl.data import load_data, register_data_args, DGLDataset
 from tqdm import tqdm
 import pandas as pd
 
+import os
+dir = os.getcwd() + "/GNN_Unsupervised"
+print(dir)
+
 def args_dgi(dimension):
     # params
     parser = argparse.ArgumentParser(description="DGI")
@@ -82,8 +86,6 @@ def evaluate(model, features, labels, mask):
         _, indices = torch.max(logits, dim=1)
         correct = torch.sum(indices == labels)
         return correct.item() * 1.0 / len(labels)
-
-# custom dataset
 
 class CustomDatasetDGI(DGLDataset):
     def __init__(self, name, nodes_data, edges_data):
@@ -230,5 +232,5 @@ def train_dgi(exp, graph, args, method, group, subgroup, iteration):
     df_node_embeddings
 
     # save
-    df_node_embeddings.to_csv("output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(exp, method, group, subgroup, iteration), index=True)
+    df_node_embeddings.to_csv("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration), index=True)
     # print("Save node embeddings")

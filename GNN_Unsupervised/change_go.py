@@ -6,8 +6,9 @@
 # In[4]:
 
 
-from utils.utils_go_ import *
+from utils.utils_ import *
 
+import json
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -26,8 +27,6 @@ print(dir)
 
 # In[5]:
 
-
-import json
   
 def main(experiment):
     # file = open("exp.json")

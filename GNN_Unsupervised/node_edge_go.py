@@ -6,14 +6,16 @@
 # In[19]:
 
 
+
 from pyod.models.ecod import ECOD
 from mpl_toolkits import mplot3d
 from sklearn.metrics import silhouette_score
 from sklearn.model_selection import RandomizedSearchCV
 from tqdm import tqdm
-from utils.utils import *
+# from utils.utils import *
 
 # import hdbscan
+import json
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -22,34 +24,34 @@ import pandas as pd
 import pingouin as pg
 import sys
 
-# get_ipython().run_line_magic('load_ext', 'autotime')
 
-import argparse, time
+# DGI
+# import argparse, time
 
-import dgl
+# import dgl
 import networkx as nx
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from dgi.dgi import Classifier, DGI
-from dgl import DGLGraph
-from dgl.data import load_data, register_data_args, DGLDataset
+# import torch.nn as nn
+# import torch.nn.functional as F
+# from dgi.dgi import Classifier, DGI
+# from dgl import DGLGraph
+# from dgl.data import load_data, register_data_args, DGLDataset
 
 import os
 
 from tqdm import tqdm
 import pandas as pd
 
-os.environ["DGLBACKEND"] = "pytorch"
-
 import sys
 # sys.path.append("../")
 
-from utils.utils_go_ import *
+from utils.utils_go import *
 from dgi.utils_dgi import *
-from vgae.utils_vgae import *
-    
+# from vgae.utils_vgae import *
+
+os.environ["DGLBACKEND"] = "pytorch"
+
 # ### Parameters
 
 # In[20]:
@@ -116,9 +118,6 @@ def main(experiment):
     # #### DGI
 
     # In[21]:
-
-
-    
 
 
     # In[22]:
@@ -301,7 +300,7 @@ def main(experiment):
                 list_common_subgraph = []
                 for iteration in range(iterations):
                     print("Option: ", option)
-                    df_edges_filter_weight_filter = pd.read_csv("output/{}/common_edges/common_edges_{}_{}_{}_{}.csv".format(dir, exp, method, group, option, iteration))
+                    df_edges_filter_weight_filter = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}_{}.csv".format(dir, exp, method, group, option, iteration))
                     # print(df_edges_filter_weight_filter)
 
                     G = nx.from_pandas_edgelist(df_edges_filter_weight_filter) # , edge_attr=["weight"])

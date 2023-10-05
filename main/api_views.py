@@ -16,12 +16,14 @@ from django.db import transaction
 from django.conf import settings
 
 from utils.response import Resp
-from utils.utils import info_graph
+# from utils.utils_v1 import info_graph
 
 from GNN_Unsupervised import experiments as exper
 
-from multiprocessing import Process
+# from multiprocessing import Process
+import multiprocessing as mp
 # import threading
+# mp.set_start_method('spawn')
 
 import time
 import pandas as pd
@@ -54,7 +56,7 @@ class ExperimentList(APIView):
             # data = Experiment.objects.get(pk="f02f05f8-bdce-4511-a746-a1e680da9e19")
 
             # run experiment
-            t1 = Process(target=exper.main, args=(data,))
+            t1 = mp.Process(target=exper.main, args=(data,))
             """ t1 = threading.Thread(target=exper.main, args=(str(data.id), data.raw_data, data.method,
                                                            data.data_variation, data.dimension, data.email)) """
             # starting threads

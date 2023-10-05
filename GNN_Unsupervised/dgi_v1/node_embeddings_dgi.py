@@ -30,7 +30,7 @@ import sys
 dir = os.getcwd()
 sys.path.append(dir)
 
-from utils.utils import *
+from utils.utils_v1 import *
 
 # %%
 torch.manual_seed(42)

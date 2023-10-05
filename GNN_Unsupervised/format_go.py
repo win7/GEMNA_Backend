@@ -6,7 +6,7 @@
 # In[23]:
 
 from tqdm import tqdm
-from utils.utils_go_ import *
+from utils.utils_go import *
 
 import json
 import networkx as nx
@@ -37,7 +37,7 @@ def main(experiment):
 
 
     method = "vgae" # vgae, dgi
-    methods = ["vgae", "dgi"]
+    methods = ["dgi"]#, "vgae"]
     dimension = 3
     option = "dyn" # dyn, str
     options = ["", "str", "dyn"]
@@ -51,7 +51,6 @@ def main(experiment):
     iterations = 2
     raw_data_file = "mutant" # "reinhard" # "mutant_a" # "plant" # "single_cell" # ""Trial Alfredo process" # "Trial 1_Reinhard" # "Trial Alfredo" # change
     obs = ""
-
 
     # ### Load dataset
 
