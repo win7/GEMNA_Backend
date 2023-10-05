@@ -6,7 +6,7 @@
 # In[4]:
 
 
-from utils.utils_ import *
+from utils.utils_go import *
 
 import json
 import matplotlib.pyplot as plt
@@ -33,7 +33,7 @@ def main(experiment):
     # experiment = json.load(file)
     exp_num = str(experiment.id) # experiment["exp"]
 
-    file = open("{}/output/exp{}/parameters.json".format(exp_num))
+    file = open("{}/output/exp{}/parameters.json".format(dir, exp_num))
     params = json.load(file)
 
     exp = params["exp"]
@@ -90,7 +90,7 @@ def main(experiment):
 
 
     # read raw data
-    df_join_raw = pd.read_csv("input/{}_raw.csv".format(exp), index_col=0)
+    df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(dir, exp), index_col=0)
     df_join_raw.head()
 
     for method in methods[:1]: # change

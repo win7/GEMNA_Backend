@@ -20,7 +20,7 @@ from main.serializers import ExperimentSerializer
 import format_go as fi
 import prepro_go as pp
 import node_edge_go as ne
-# import change_go as ch
+import change_go as ch
 # import biocyc_go as by
 
 import time
@@ -52,10 +52,10 @@ def main(experiment):
     print("\nNode-Edge embedding")
     ne.main(experiment)
 
-    """ print("\nChange detection") 
+    print("\nChange detection") 
     ch.main(experiment)
 
-    print("\nProcessing biocyc")
+    """ print("\nProcessing biocyc")
     by.main(experiment) """
 
     """ subject, from_email, to = 'Metabolomic Analysis', 'edwin.alvarez@pucp.edu.pe', experiment.email
