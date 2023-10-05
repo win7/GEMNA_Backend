@@ -1,8 +1,10 @@
+from tqdm import tqdm
+
 import os
 import sys
 
-dir = os.getcwd() + "/GNN_Unsupervised"
-sys.path.append(dir)
+# dir = os.getcwd() + "/GNN_Unsupervised"
+# sys.path.append(dir)
 
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
@@ -11,12 +13,12 @@ from django.conf import settings
 from main.models import Experiment
 from main.serializers import ExperimentSerializer
 
-import format_input as fi
-import preprocessing as pp
-import node_embeddings_dgi as dgi
-import processing as pg
+import format_go as fi
+import prepro_go as pp
+import node_edge_go as ne
+""" import processing as pg
 import change_detection as cd
-import processing_biocyc as pb
+import processing_biocyc as pb """
 
 import time
 
@@ -32,14 +34,22 @@ def main(experiment):
     # exp = "010853ec-3b7f-4255-bfbf-cb36ac59119f"
     print("Start")
     start = time.time()
+    
+    """ files = ["1_format_go", "2_prepro_go"] # , "3-4_node-edge_go", "5_change_go", "6_biocyc_go"]
+
+    for file in tqdm(files):
+        os.system("python GNN_Unsupervised/{}.py".format(file)) """
 
     print("\nFormat input")
     fi.main(experiment)
 
     print("\nPreprocessing")
     pp.main(experiment)
+    
+    print("\nNode-Edge embedding")
+    ne.main(experiment)
 
-    print("\nNode embeddings")
+    """ print("\nNode embeddings")
     dgi.main(experiment)
 
     print("\nProcessing")
@@ -72,5 +82,5 @@ def main(experiment):
     # experiment = Experiment.objects.get(pk=experiment.id)
     experiment.runtime = elapsed_time
     experiment.save()
-    print(elapsed_time)
+    print(elapsed_time) """
     print("End")

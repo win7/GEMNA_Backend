@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from dgl.nn.pytorch import GraphConv, GATConv, GINEConv
+from dgl.nn.pytorch import GraphConv
 # from train import device
 device = torch.device(
     "cuda:{}".format(0) if torch.cuda.is_available() else "cpu"
@@ -35,7 +35,7 @@ class VGAEModel(nn.Module):
                 self.hidden2_dim,
                 activation=lambda x: x,
                 allow_zero_in_degree=True,
-            )
+            ),
         ]
         self.layers = nn.ModuleList(layers)
 
