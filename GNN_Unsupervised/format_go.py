@@ -36,20 +36,20 @@ def main(experiment):
     # In[25]:
 
 
-    method = "dgi" # vgae, dgi
-    methods = ["dgi"]#, "vgae"]
-    dimension = 3
-    option = "dyn" # dyn, str
-    options = ["", "str", "dyn"]
-    control = "WT" # "T" # "LG" # "FCSglc" # "WT"
+    method = experiment.method # vgae, dgi
+    methods = [experiment.method]#, "vgae"]
+    dimension = experiment.dimension
+    option = experiment.data_variation # none, dyn, str
+    options = ["none", "str", "dyn"]
+    control = experiment.control # "T" # "LG" # "FCSglc" # "WT"
     range_ = 10
-    has_transformation = "false" # true or false # change
-    alpha = 0.05
-    threshold = 0.01
-    threshold_log2 = 0
+    has_transformation = experiment.transformation # true or false # change
+    alpha = experiment.alpha
+    threshold = experiment.threshold_corr
+    threshold_log2 = experiment.threshold_log2
     seeds = [42, 43, 44, 45, 46]
     iterations = 2
-    raw_data_file = "mutant" # "reinhard" # "mutant_a" # "plant" # "single_cell" # ""Trial Alfredo process" # "Trial 1_Reinhard" # "Trial Alfredo" # change
+    raw_data_file = experiment.raw_data # "mutant" # "reinhard" # "mutant_a" # "plant" # "single_cell" # ""Trial Alfredo process" # "Trial 1_Reinhard" # "Trial Alfredo" # change
     obs = ""
 
     # ### Load dataset
