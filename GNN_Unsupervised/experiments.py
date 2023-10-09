@@ -11,17 +11,13 @@ from django.db import transaction
 from django.conf import settings
 
 from main.models import Experiment
-from main.serializers import ExperimentSerializer
-
-# import format_input as fi
-# import preprocessing as pp
-# import node_embeddings_dgi as ne
+# from .main.serializers import ExperimentSerializer
 
 import format_go as fi
 import prepro_go as pp
 import node_edge_go as ne
 import change_go as ch
-# import biocyc_go as by
+import biocyc_go as by
 
 import time
 
@@ -30,7 +26,7 @@ raw_data = "GNN_Unsupervised/raw_data/Trial_1_Reinhard_0hXQP9m.csv"
 method = "dgi" # vgae, dgi
 dimension = 3
 option = "dyn" # dyn, str
-email = "win7.eam@gmail.com" """
+email = "win7.eam@gmail.com" """               
 
 def main(experiment):
     # print(exp, raw_data, method, option, dimension, email)
@@ -55,8 +51,8 @@ def main(experiment):
     print("\nChange detection") 
     ch.main(experiment)
 
-    """ print("\nProcessing biocyc")
-    by.main(experiment) """
+    print("\nProcessing biocyc")
+    by.main(experiment)
 
     """ subject, from_email, to = 'Metabolomic Analysis', 'edwin.alvarez@pucp.edu.pe', experiment.email
     text_content = 'This is an important message.'
@@ -81,3 +77,14 @@ def main(experiment):
     experiment.save()
     print(elapsed_time)
     print("End")
+"""    
+if __name__ == "__main__":
+    import multiprocessing as mp
+    
+    id = "1c04eacf-a4cc-4407-8d28-418ed3370c5d"
+    experiment = Experiment.objects.get(pk=id)
+    
+    # mp1.set_start_method('spawn', force=True)
+    t1 = mp.Process(target=main, args=(experiment,))
+    # starting threads
+    t1.start() """

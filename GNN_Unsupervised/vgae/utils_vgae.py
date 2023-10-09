@@ -28,7 +28,7 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 
-os.environ["DGLBACKEND"] = "pytorch"
+# os.environ["DGLBACKEND"] = "pytorch"
     
 def args_vgae(dimension):
     os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
@@ -163,13 +163,18 @@ def train_vgae(exp, graph, args, method, group, subgroup, iteration):
     device = torch.device(
         "cuda:{}".format(args.gpu_id) if torch.cuda.is_available() else "cpu"
     )
-    # print(device)
+    print("-------------------")
+    print(device)
+    print("-------------------")
+    
     # device = "cpu"
     # device
     
+    # torch.cuda.set_device(device)
+    torch.cuda.set_device(0)
     # extract node features
     # print(device)
-    feats = graph.ndata.pop("feat").to(device)
+    feats = graph.ndata.pop("feat").cuda() # to(device)
     in_dim = feats.shape[-1]
     # print(in_dim)
 

@@ -36,7 +36,7 @@ def main(experiment):
     # In[25]:
 
 
-    method = "vgae" # vgae, dgi
+    method = "dgi" # vgae, dgi
     methods = ["dgi"]#, "vgae"]
     dimension = 3
     option = "dyn" # dyn, str

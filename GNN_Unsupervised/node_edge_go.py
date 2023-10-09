@@ -39,7 +39,7 @@ import torch
 # from dgl.data import load_data, register_data_args, DGLDataset
 
 import os
-
+# torch.multiprocessing.set_start_method('spawn', force=True)
 from tqdm import tqdm
 import pandas as pd
 
@@ -164,12 +164,13 @@ def main(experiment):
                             args_ = args_dgi(dimension)
                             train_dgi(exp, graph, args_, method, group, subgroup, iteration)
                         else:
-                            data = CustomDatasetVGAE("g_{}_{}".format(group, subgroup), nodes_data, edges_data)
+                            pass
+                            """ data = CustomDatasetVGAE("g_{}_{}".format(group, subgroup), nodes_data, edges_data)
                             graph = data[0]
 
                             # train
                             args_ = args_vgae(dimension)
-                            train_vgae(exp, graph, args_, method, group, subgroup, iteration)
+                            train_vgae(exp, graph, args_, method, group, subgroup, iteration) """
                     
                 # ---
                 # Edge embeddings

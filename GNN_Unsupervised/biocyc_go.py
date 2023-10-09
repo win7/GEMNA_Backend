@@ -38,7 +38,7 @@ def main(experiment):
     # experiment = json.load(file)
     exp_num = str(experiment.id) # experiment["exp"]
 
-    file = open("{}/output/exp{}/parameters.json".format(dir, exp_num))
+    file = open("{}/output/{}/parameters.json".format(dir, exp_num))
     params = json.load(file)
 
     exp = params["exp"]
@@ -119,7 +119,7 @@ def main(experiment):
                             names=["Metabolite name", "Average Mz", "Alignment ID", groups[0], groups[1], "Ratio"], sep="\t") # header=None
                     
                     # plot
-                    fig = go.Figure(data=go.Heatmap(
+                    """ fig = go.Figure(data=go.Heatmap(
                     z=df_biocyc.iloc[:, 3:5].T.values,
                     y=groups,
                     x=list(map(str, df_biocyc.iloc[:, 1].values)),
@@ -131,5 +131,5 @@ def main(experiment):
                     y=["ratio"],
                     x=list(map(str, df_biocyc.iloc[:, 1].values)),
                     hoverongaps = False))
-                    fig.show()
+                    fig.show() """
 

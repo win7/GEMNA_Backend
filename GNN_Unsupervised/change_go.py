@@ -33,7 +33,7 @@ def main(experiment):
     # experiment = json.load(file)
     exp_num = str(experiment.id) # experiment["exp"]
 
-    file = open("{}/output/exp{}/parameters.json".format(dir, exp_num))
+    file = open("{}/output/{}/parameters.json".format(dir, exp_num))
     params = json.load(file)
 
     exp = params["exp"]
