@@ -38,7 +38,7 @@ class Experiment(models.Model):
 	silhouette = models.FloatField("Silhouette score", default=0.0)
 	runtime = models.IntegerField("Runtime", default=0)
 	email = models.EmailField("Email", blank=False, null=False)
-	transformation = models.CharField("Transformation", max_length=5, blank=False, null=False)
+	transformation = models.BooleanField("Transformation", default=False)
 	detail = models.TextField("Details", max_length=100, blank=True, null=True)
 	
 	# profile_id = models.OneToOneField(Profile, on_delete=models.CASCADE, verbose_name="Perfil", blank=True, null=True)

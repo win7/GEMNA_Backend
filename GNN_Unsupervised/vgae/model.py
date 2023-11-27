@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from dgl.nn.pytorch import GraphConv, GATConv, GINEConv
 # from train import device
 device = torch.device(
-    "cuda:{}".format(0) if torch.cuda.is_available() else "cpu"
+    "cuda:{}".format(1) if torch.cuda.is_available() else "cpu"
 )
 # device="cpu"
 # print(device)

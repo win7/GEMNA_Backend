@@ -13,31 +13,19 @@ from django.conf import settings
 from main.models import Experiment
 # from .main.serializers import ExperimentSerializer
 
-import format_go as fi
-import prepro_go as pp
-import node_edge_go as ne
-import change_go as ch
-import biocyc_go as by
+import a_format_go as fi
+import b_prepro_go as pp
+import cd_node_edge_go as ne
+import e_change_go as ch
+import f_biocyc_go as by
 
 import time
-
-""" exp = "518b4e5d-4097-486a-907b-936002091f5e"
-raw_data = "GNN_Unsupervised/raw_data/Trial_1_Reinhard_0hXQP9m.csv"
-method = "dgi" # vgae, dgi
-dimension = 3
-option = "dyn" # dyn, str
-email = "win7.eam@gmail.com" """               
 
 def main(experiment):
     # print(exp, raw_data, method, option, dimension, email)
     # exp = "010853ec-3b7f-4255-bfbf-cb36ac59119f"
     print("Start")
     start = time.time()
-    
-    """ files = ["1_format_go", "2_prepro_go"] # , "3-4_node-edge_go", "5_change_go", "6_biocyc_go"]
-
-    for file in tqdm(files):
-        os.system("python GNN_Unsupervised/{}.py".format(file)) """
 
     print("\nFormat input")
     fi.main(experiment)
@@ -54,7 +42,7 @@ def main(experiment):
     print("\nProcessing biocyc")
     by.main(experiment)
 
-    """ subject, from_email, to = 'Metabolomic Analysis', 'edwin.alvarez@pucp.edu.pe', experiment.email
+    subject, from_email, to = 'Metabolomic Analysis', 'edwin.alvarez@pucp.edu.pe', experiment.email
     text_content = 'This is an important message.'
     html_content = '<p>This is the experiment code <strong>' + str(experiment.id) + '</strong>.</p>'
     msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
@@ -67,7 +55,7 @@ def main(experiment):
         aux_dir = "{}{}".format(dir, item)
         with open(aux_dir) as file:
             msg.attach(item, file.read(), "application/csv")
-    msg.send() """
+    msg.send()
 
     end = time.time()
     elapsed_time = round((end - start) / 60, 2)
@@ -77,6 +65,7 @@ def main(experiment):
     experiment.save()
     print(elapsed_time)
     print("End")
+    
 """    
 if __name__ == "__main__":
     import multiprocessing as mp

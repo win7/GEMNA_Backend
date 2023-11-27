@@ -1,18 +1,21 @@
 from itertools import combinations
-
-from plotly.subplots import make_subplots
-
-from sklearn.cluster import KMeans, DBSCAN
-from sklearn.metrics import adjusted_rand_score, rand_score, silhouette_samples, silhouette_score
-
-from sklearn.decomposition import PCA, KernelPCA
-from sklearn.preprocessing import Normalizer
-from sklearn.manifold import TSNE, MDS, Isomap, LocallyLinearEmbedding, SpectralEmbedding
-# from hdbscan import HDBSCAN
-# from umap import UMAP
-from tqdm import tqdm
-
 import math
+import random
+import os
+
+from ipywidgets import Layout, Button, Box, Checkbox, FloatText, FloatSlider, Text, Textarea, Dropdown,\
+    Label, IntSlider, IntText, SelectMultiple
+from IPython.display import display
+# from hdbscan import HDBSCAN
+from plotly.subplots import make_subplots
+# from sklearn.cluster import KMeans, DBSCAN
+from sklearn.decomposition import PCA, KernelPCA
+from sklearn.manifold import TSNE, MDS, Isomap, LocallyLinearEmbedding, SpectralEmbedding
+from sklearn.metrics import adjusted_rand_score, rand_score, silhouette_samples, silhouette_score
+from sklearn.preprocessing import Normalizer
+from tqdm import tqdm
+# from umap import UMAP
+
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib
@@ -22,13 +25,9 @@ import pandas as pd
 import pingouin as pg
 import plotly.graph_objects as go
 import plotly
-import random
-import torch
 import pymp
-
 import scipy.stats as stats
-
-import os
+import torch
 
 colors = ["#FF00FF", "#3FFF00", "#00FFFF", "#FFF700", "#FF0000", "#0000FF", "#006600",
           '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', 'black',"gray"]
@@ -51,6 +50,33 @@ id_mz = {
 }
 dir = os.getcwd() + "/GNN_Unsupervised"
 
+def check_dataset(df):
+    print("Checking dataset") 
+    
+    # ds = df.isin([np.inf, -np.inf]) 
+    # print(ds.head()) 
+    
+    count_inf = np.isinf(df).values.sum() 
+    print("Count infinite:\t", count_inf) 
+    
+    # printing column name where infinity is present 
+    """ print() 
+    print("Column name where infinity is present") 
+    col_name = df.columns.to_series()[np.isinf(df).any()] 
+    print(col_name) """
+    
+    count_nan = df.isna().sum().sum()
+    print("Count nan:\t", count_nan)
+    
+    count_negative = (df < 0).sum().sum()
+    print("Count negative:\t", count_negative) 
+    
+    count_zero = (df == 0).sum().sum()
+    print("Count zero:\t", count_zero) 
+    
+    count_positive = (df > 0).sum().sum()
+    print("Count positive:\t", count_positive) 
+    
 def count_values(df_column):
     df_count = df_column.value_counts().to_frame().reset_index()
     df_count.loc[len(df_count)] = ["NaN", df_column.isna().sum()]
@@ -79,12 +105,33 @@ def filter_df_change_ID(df_change_filter, ID):
     df_change_filter_temp = df_change_filter[(df_change_filter["source"] == ID) | (df_change_filter["target"] == ID)]
     return df_change_filter_temp
 
-def create_graph_data_go_features(exp, groups_id, subgroups_id, list_df_groups_subgroups):
+def create_graph_data_go_features_directed(exp, groups_id, subgroups_id, list_df_groups_subgroups):
     for i, group in tqdm(enumerate(groups_id)):
         for j, subgroup in tqdm(enumerate(subgroups_id[group])):
             df_weighted_edges = pd.read_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, group, subgroup))
             
             G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr="weight")
+            mapping = dict(zip(list(G.nodes()), range(G.number_of_nodes())))
+            G = nx.relabel_nodes(G, mapping)
+            
+            df_nodes = list_df_groups_subgroups[i][j].loc[list(mapping.keys())]
+            df_nodes.columns = list(range(len(df_nodes.columns)))
+            df_nodes.insert(0, "idx", list(mapping.values()))
+            df_nodes.insert(1, "id", list(mapping.keys()))
+            df_nodes.to_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, group, subgroup), index=False)
+
+            edges = list(G.edges())
+            df_edges = pd.DataFrame(edges, columns=["source", "target"])
+            df_edges["weight"] = [G.get_edge_data(edge[0], edge[1])["weight"] for edge in edges]
+            df_edges.to_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, subgroup), index=False)
+
+def create_graph_data_go_features_undirected(exp, groups_id, subgroups_id, list_df_groups_subgroups):
+    for i, group in tqdm(enumerate(groups_id)):
+        for j, subgroup in tqdm(enumerate(subgroups_id[group])):
+            df_weighted_edges = pd.read_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, group, subgroup))
+            
+            G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr="weight", create_using=nx.DiGraph()) # last change: create_using=nx.DiGraph()
+            print("Directed", G.is_directed())
             mapping = dict(zip(list(G.nodes()), range(G.number_of_nodes())))
             G = nx.relabel_nodes(G, mapping)
             
@@ -188,7 +235,7 @@ def build_graph_weight_global_partial_corr(exp, groups_id, subgroups_id, list_gr
             df_weighted_edges.to_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
             G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr=["weight"])
             print(groups_id[i], subgroups_id[groups_id[i]][j], G.number_of_nodes(), G.number_of_edges())
-            # nx.write_gexf(G, "{}/output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
+            # nx.write_gexf(G, "output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
 
             list_aux.append(df_weighted_edges)
         list_groups_subgroups_t_corr_g.append(list_aux)
@@ -278,7 +325,7 @@ def std_global(dict_df_edges_filter_weight, exp, method, groups_id, option, th=0
             df_edges_filter_weight_std_avg.to_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}.csv".format(dir, exp, method, group, option), index=False)
             
             """ G = nx.from_pandas_edgelist(df_edges_filter_weight_std_avg, "source", "target", edge_attr=["weight"])
-            nx.write_gexf(G, "{}/output/{}/common_edges/common_edges_{}_{}_{}.gexf".format(dir, exp, method, group, option)) """
+            nx.write_gexf(G, "output/{}/common_edges/common_edges_{}_{}_{}.gexf".format(dir, exp, method, group, option)) """
 
         # plot
         """ if plot:
@@ -368,7 +415,7 @@ def std_global_(dict_df_edges_filter_weight, exp, method, dimension, groups_id, 
             df_edges_filter_weight_std_avg.to_csv("{}/output/{}/baseline/common_edges/common_edges_std_{}_{}_{}_{}.csv".format(dir, exp, group, method, dimension, "L2"), index=False)
             
             G = nx.from_pandas_edgelist(df_edges_filter_weight_std_avg, "source", "target", edge_attr=["weight"])
-            nx.write_gexf(G, "{}/output/{}/baseline/common_edges/common_edges_std_{}_{}_{}_{}.gexf".format(dir, exp, group, method, dimension, "L2"))
+            nx.write_gexf(G, "output/{}/baseline/common_edges/common_edges_std_{}_{}_{}_{}.gexf".format(dir, exp, group, method, dimension, "L2"))
 
         # plot
         if plot:
@@ -580,13 +627,13 @@ def build_graph_weight_global(exp, list_groups_subgroups_t_corr, groups_id, subg
 
             df_weighted_edges.to_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
             G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr=["weight"])
-            nx.write_gexf(G, "{}/output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
+            nx.write_gexf(G, "output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
 
             list_aux.append(df_weighted_edges)
         list_groups_subgroups_t_corr_g.append(list_aux)
     return list_groups_subgroups_t_corr_g
 
-def build_graph_weight_global_(exp, list_groups_subgroups_t_corr, groups_id, subgroups_id, threshold=0.5):
+def build_graph_weight_global_directed(exp, list_groups_subgroups_t_corr, groups_id, subgroups_id, threshold=0.5):
     list_groups_subgroups_t_corr_g = []
 
     for i in tqdm(range(len(list_groups_subgroups_t_corr))):
@@ -608,7 +655,37 @@ def build_graph_weight_global_(exp, list_groups_subgroups_t_corr, groups_id, sub
             df_weighted_edges.to_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
             G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr=["weight"])
             print(groups_id[i], subgroups_id[groups_id[i]][j], G.number_of_nodes(), G.number_of_edges())
-            # nx.write_gexf(G, "{}/output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
+            # nx.write_gexf(G, "output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
+
+            list_aux.append(df_weighted_edges)
+        list_groups_subgroups_t_corr_g.append(list_aux)
+    return list_groups_subgroups_t_corr_g
+
+def build_graph_weight_global_undirected(exp, list_groups_subgroups_t_corr, groups_id, subgroups_id, threshold=0.5):
+    list_groups_subgroups_t_corr_g = []
+
+    for i in tqdm(range(len(list_groups_subgroups_t_corr))):
+        list_aux = []
+        for j in tqdm(range(len(list_groups_subgroups_t_corr[i]))):
+            df_temp = list_groups_subgroups_t_corr[i][j]
+            
+            df_weighted_edges = (df_temp.where(np.triu(np.ones(df_temp.shape), k=-df_temp.shape[1]).astype(bool)).stack())
+            df_weighted_edges = df_weighted_edges.dropna().to_frame()
+            df_weighted_edges.reset_index(inplace=True)
+            df_weighted_edges.columns = ["source", "target", "weight"]
+            df_weighted_edges = df_weighted_edges[df_weighted_edges["source"] != df_weighted_edges["target"]]
+            df_weighted_edges = df_weighted_edges[df_weighted_edges["weight"].abs() >= threshold] # change
+            
+            # df_weighted_edges = df_weighted_edges[df_weighted_edges["weight"] >= threshold] # used in [0, 1]
+            # df_weighted_edges["weight"] = [1] * len(df_weighted_edges) # change this line
+            
+            # df_weighted_edges["weight"] = df_weighted_edges["weight"].apply(lambda x: np.cbrt(x)) # change this line 
+            # df_weighted_edges["weight"] = df_weighted_edges["weight"].apply(lambda x: math.pow(abs(x), 1/3)) # change this line 
+            
+            df_weighted_edges.to_csv("{}/output/{}/preprocessing/edges/edges_{}_{}.csv".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]), index=False)
+            G = nx.from_pandas_edgelist(df_weighted_edges, "source", "target", edge_attr=["weight"])
+            print(groups_id[i], subgroups_id[groups_id[i]][j], G.number_of_nodes(), G.number_of_edges())
+            # nx.write_gexf(G, "output/{}/preprocessing/graphs/graphs_{}_{}.gexf".format(dir, exp, groups_id[i], subgroups_id[groups_id[i]][j]))
 
             list_aux.append(df_weighted_edges)
         list_groups_subgroups_t_corr_g.append(list_aux)
@@ -672,6 +749,7 @@ def log10_global(df_join_raw):
     for column in df_join_raw.columns:
         # df_join_raw_log[column] = np.log10(df_join_raw[column], where=df_join_raw[column]>0)
         df_join_raw_log[column] = np.log10(df_join_raw_log[column])
+        df_join_raw_log[column] = df_join_raw_log[column].replace(-np.Inf, np.nan)
         df_join_raw_log[column] = df_join_raw_log[column].replace(np.nan, df_join_raw_log[column].min() / 100)
     return df_join_raw_log
 
@@ -1012,7 +1090,11 @@ def p_edge2vec_l2(df_edges, df_node_embeddings):
 
             u = df_node_embeddings.loc[i].values
             v = df_node_embeddings.loc[j].values
-            r = (u - v) ** 2
+            
+            # r = np.abs(u - v)     # L1
+            r = (u - v) ** 2        # L2
+            # r = u * v             # Hadamard
+            # r = (u + v) / 2       # Average
             
             data[k] = r
             index[k] = (i, j)

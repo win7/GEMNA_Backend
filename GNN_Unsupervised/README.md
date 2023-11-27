@@ -29,10 +29,28 @@ Aditional Files
 1. synthetic_graphs:
 2.
 
+Main files:
+
+- 1_format_go.ipynb
+- 2_prepo_go.ipynb
+- 3_4_node-edge_go.ipynb
+- 5_change_go.ipynb
+- 6_biocyc_go.ipynb
+- baseline.ipynb
+- comparation.ipynb
+
 ## To-Do
 - Dynamic edge embeddings operator
 - Parallel edge2vec operator (ok)
-- Improve mapping idx with id
+- Improve mapping idx with id (ok)
+- Test Anomaly detection ()
+- Convert graph to line graph
+- Improve node features selection (ok)
+- First filter by same nodes 
+
+## Notes
+- exp2 mutant a
+- _go = features
 
 ## Notes
 - exp1 MS GNN Greedy (experimet 1) (this for manuscript)
@@ -48,3 +66,74 @@ Aditional Files
 - exp12 Hammerly (1.1, 1.2, ...) D2 concat (ok)
 - exp13 Reinhard (1.1, 1.2, ...) (for save main files)
 - exp14 Reinhard (1.1, 1.2, ...) (ok)
+- exp16  Alfredo (1.1, 1.2, ...) (Aligment ID,Average Mz,Metabolite name)
+
+- exp20 Alfredo ok
+- exp21 Reinhard ok has normalization = false
+- exp22 Reinhard ok has normalization = true
+- exp23 Alfredo ok process
+- exp11 Single cell
+- exp12 Plant
+
+- exp14 new mutants
+- exp16 new mutants (with dynamic th corr)
+
+### On colab
+
+!pip install pingouin
+!pip install pymp-pypi
+!pip install pyod
+!pip install  dgl -f https://data.dgl.ai/wheels/cu118/repo.html
+!pip install  dglgo -f https://data.dgl.ai/wheels-test/repo.html
+
+
+import sys
+import os
+
+from google.colab import drive
+
+drive.mount("/content/drive")
+
+py_file_location = "/content/drive/MyDrive/PUCP/Phd/S4/T4/Code/GNN_Unsupervised"
+sys.path.append(os.path.abspath(py_file_location))
+
+%cd /content/drive/MyDrive/PUCP/Phd/S4/T4/Code/GNN_Unsupervised
+!pwd
+
+1
+!pip install pingouin
+!pip install pymp
+2
+!pip install pingouin
+!pip install pymp
+3-4
+! nvcc --version
+!pip install pingouin
+!pip install pymp-pypi
+!pip install pyod
+!pip install  dgl -f https://data.dgl.ai/wheels/cu118/repo.html
+!pip install  dglgo -f https://data.dgl.ai/wheels-test/repo.html
+5
+!pip install pingouin
+!pip install pymp-pypi
+!pip install pyod
+6
+!pip install pingouin
+!pip install pymp-pypi
+
+## convert
+run: convert_ipyng_py.py
+
+def main(params):
+    return exp
+def main():
+
+
+## Import versions
+import pingouin as pg
+import numpy as np
+import seaborn as sn
+print(pg.__version__) # 0.5.3
+print(pd.__version__) # 2.0.3
+print(np.__version__) # 1.24.3
+print(sn.__version__) # 0.13.0

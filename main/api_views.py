@@ -25,7 +25,7 @@ import multiprocessing as mp
 # import threading
 # mp.set_start_method('spawn')
 # mp.set_start_method('spawn', force=True)
-import torch.multiprocessing as mp1
+# import torch.multiprocessing as mp1
 
 import time
 import pandas as pd
@@ -68,7 +68,7 @@ class ExperimentList(APIView):
             # ctx = mp.get_context("spawn")
             
             # mp1.set_start_method('spawn', force=True)
-            t1 = mp1.Process(target=exper.main, args=(data,))
+            t1 = mp.Process(target=exper.main, args=(data,))
             # starting threads
             t1.start()
             # wait until all threads finish

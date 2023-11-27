@@ -1,21 +1,18 @@
-import argparse, time
+import argparse
+import time
+import os
 
+from dgl.data import DGLDataset
 import dgl
-import networkx as nx
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from dgi.dgi import Classifier, DGI
-from dgl import DGLGraph
-from dgl.data import load_data, register_data_args, DGLDataset
 
-from tqdm import tqdm
-import pandas as pd
+from dgi.dgi import DGI
 
-import os
-dir = os.getcwd() + "/GNN_Unsupervised"
-print(dir)
+os.environ["DGLBACKEND"] = "pytorch"
 
 def args_dgi(dimension):
     # params
@@ -207,7 +204,7 @@ def train_dgi(exp, graph, args, method, group, subgroup, iteration):
             best = loss
             best_t = epoch
             cnt_wait = 0
-            torch.save(dgi.state_dict(), "best_dgi.pkl")
+            # torch.save(dgi.state_dict(), "best_dgi.pkl")
         else:
             cnt_wait += 1
 
@@ -232,5 +229,5 @@ def train_dgi(exp, graph, args, method, group, subgroup, iteration):
     df_node_embeddings
 
     # save
-    df_node_embeddings.to_csv("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration), index=True)
+    df_node_embeddings.to_csv("output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(exp, method, group, subgroup, iteration), index=True)
     # print("Save node embeddings")

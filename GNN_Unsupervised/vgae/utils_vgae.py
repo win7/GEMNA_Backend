@@ -1,19 +1,15 @@
 import argparse
-import os
 import time
+import os
 
+from dgl.data import DGLDataset
+from sklearn.metrics import average_precision_score, roc_auc_score
+from tqdm import tqdm
 import dgl
-
-from vgae import model
 import numpy as np
-import scipy.sparse as sp
+import pandas as pd
 import torch
 import torch.nn.functional as F
-from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset
-# from input_data import load_data
-
-import torch
-from dgl.data import DGLDataset
 
 from vgae.preprocess import (
     mask_test_edges,
@@ -21,14 +17,9 @@ from vgae.preprocess import (
     preprocess_graph,
     sparse_to_tuple,
 )
-from sklearn.metrics import average_precision_score, roc_auc_score
+from vgae import model
 
-from tqdm import tqdm
-import pandas as pd
-import networkx as nx
-import numpy as np
-
-# os.environ["DGLBACKEND"] = "pytorch"
+os.environ["DGLBACKEND"] = "pytorch"
     
 def args_vgae(dimension):
     os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
@@ -161,20 +152,15 @@ def get_scores(edges_pos, edges_neg, adj_rec):
 def train_vgae(exp, graph, args, method, group, subgroup, iteration):
      # check device
     device = torch.device(
-        "cuda:{}".format(args.gpu_id) if torch.cuda.is_available() else "cpu"
+        "cuda:{}".format(1) if torch.cuda.is_available() else "cpu"
     )
-    print("-------------------")
-    print(device)
-    print("-------------------")
-    
+    # print(device)
     # device = "cpu"
     # device
     
-    # torch.cuda.set_device(device)
-    torch.cuda.set_device(0)
     # extract node features
     # print(device)
-    feats = graph.ndata.pop("feat").cuda() # to(device)
+    feats = graph.ndata.pop("feat").to(device)
     in_dim = feats.shape[-1]
     # print(in_dim)
 
@@ -213,7 +199,7 @@ def train_vgae(exp, graph, args, method, group, subgroup, iteration):
     ) """
 
     # create training epoch
-    for epoch in tqdm(range(args.epochs)):
+    for epoch in range(args.epochs): # tqdm(range(args.epochs)):
         t = time.time()
 
         # Training and validation using a full graph
