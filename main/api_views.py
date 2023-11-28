@@ -116,7 +116,7 @@ class ExperimentDetail(APIView):
                 print(files)
                 
                 for item in files:
-                    if "significant" in item or "compose" in item:
+                    if "significant" in item or "compose" in item or "summary" in item:
                         continue
                     aux = item.split("_")
                     name = "{}-{}".format(aux[4], aux[5])
@@ -162,7 +162,7 @@ class ExperimentDetail(APIView):
                 return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR).send()
         except Experiment.DoesNotExist:
             return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
-       
+        
     def put(self, request, pk, format=None):
         experiment = self.get_object(pk)
         serializer = ExperimentSerializer(experiment, data=request.data)
@@ -195,13 +195,14 @@ class ExperimentConsult(APIView):
                 group = request.data["group"]
                 nodes = request.data["nodes"]
                 type = request.data["type"]
+                plot = request.data["plot"]
                 
                 groups = group.split("-")
 
                 experiment = Experiment.objects.get(pk=pk)
 
                 dir1 = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_log2_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
-                                                                                                         experiment.method, group.replace("-", "_"), "") # experiment.data_variation)
+                                                                                                    experiment.method, group.replace("-", "_"), experiment.data_variation)
                 df_change_filter = pd.read_csv(dir1, dtype={"source": "string", "target": "string",
                                                             "source1": "string", "target1": "string"})
                 # df_change_filter = pd.read_csv(dir1)
@@ -223,12 +224,22 @@ class ExperimentConsult(APIView):
                 # print(list(df_change_filter.iloc[:, key_subgraph[type]]))
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", # *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
                                             edge_attr=["label"], create_using=nx.DiGraph())
+                
+                # get neighbors
+                print(list(H.degree(nodes)))
+                if plot == "correlation_neighbors":
+                    aux_nodes = nodes.copy()
+                    for node in aux_nodes:
+                        nodes += list(H.neighbors(node))
+                print(len(nodes))
+                
                 HF = H.subgraph(nodes) # H.subgraph(nodes) or H # graph or subgraph
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
                 # print(df_change_filter_sub)
 
                 # degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
-                degrees = np.array([[int(node), val] for (node, val) in H.degree()])
+                # degrees = np.array([[int(node), val] for (node, val) in HF.degree()]) # H.degree (all), HF.degree (part)
+                degrees = np.array(list(H.degree(nodes)))
                 degrees = degrees[degrees[:, 0].argsort()]
                 # print(degrees)
 
@@ -245,14 +256,15 @@ class ExperimentConsult(APIView):
                     matrix.loc[row['target'], row['source']] = row['weight2'] - row['weight1'] """
 
                 dir2 = "{}/GNN_Unsupervised/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
-                                                                                         experiment.method, group, "") # experiment.data_variation)
+                                                                                        experiment.method, group, experiment.data_variation)
                 df_biocyc = pd.read_csv(dir2, delimiter="\t") # , names=["name", "mz", "id", "Before", "After", "Ratio"])
                 df_biocyc.columns = ["name", "mz", "id", "Before", "After", "Ratio"]
+                df_biocyc = df_biocyc[df_biocyc["id"].isin(list(map(int, nodes)))] # filter for part of dataframe
                 print(df_biocyc.info())
                 df_biocyc.sort_values(by=["id"], inplace=True) # sort_values(by=[type], inplace=True)
                 # print(df_biocyc)
-                df_biocyc = df_biocyc.loc[:, [type, "Before", "After"]]
-                df_biocyc.columns = ["ID", "Before", "After"]
+                df_biocyc = df_biocyc.loc[:, [type, "Before", "After", "Ratio"]]
+                df_biocyc.columns = ["ID", "Before", "After", "Ratio"]
                 print(df_biocyc)
                 # print(df_biocyc.info())
 
@@ -263,6 +275,7 @@ class ExperimentConsult(APIView):
                     "degrees": degrees
                 }
                 # print(data["biocyc"])
+                print("End...")
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
                 print(str(e))
