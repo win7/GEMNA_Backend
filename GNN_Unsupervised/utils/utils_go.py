@@ -452,7 +452,8 @@ def edge_embeddings_global(exp, method, groups_id, subgroups_id, iteration):
             df_edges = pd.read_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, subgroup))
             
             # get edges embeddings
-            df_edge_embeddings = p_edge2vec_l2(df_edges, df_node_embeddings)
+            df_edge_embeddings = edge2vec_l2(df_edges, df_node_embeddings)
+            # df_edge_embeddings = p_edge2vec_l2(df_edges, df_node_embeddings)
             df_edge_embeddings.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration), index=False)
 
 def create_graph_data(exp, groups_id, subgroups_id):
@@ -1118,11 +1119,16 @@ def edge2vec_l2(df_edges, df_node_embeddings):
         v = df_node_embeddings.loc[j].values
         r = (u - v) ** 2
         
-        index.append((i, j))
+        index.append([i, j]) # (i, j)
         data.append(r)
 
-    index = pd.MultiIndex.from_tuples(index)
-    df_edge_embeddings = pd.DataFrame(data, index=index)
+    # index = pd.MultiIndex.from_tuples(index)
+    # df_edge_embeddings = pd.DataFrame(data, index=index)
+    index = np.array(index)
+    df_edge_embeddings = pd.DataFrame(data)
+    df_edge_embeddings.insert(0, "source", index[:, 0])
+    df_edge_embeddings.insert(1, "target", index[:, 1])
+    # print(df_edge_embeddings)
     return df_edge_embeddings
 
 def edge2vec_l2_v2(df_edges, df_node_embeddings):
