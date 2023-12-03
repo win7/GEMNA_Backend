@@ -452,8 +452,8 @@ def edge_embeddings_global(exp, method, groups_id, subgroups_id, iteration):
             df_edges = pd.read_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, subgroup))
             
             # get edges embeddings
-            df_edge_embeddings = edge2vec_l2(df_edges, df_node_embeddings)
-            # df_edge_embeddings = p_edge2vec_l2(df_edges, df_node_embeddings)
+            # df_edge_embeddings = edge2vec_l2(df_edges, df_node_embeddings)
+            df_edge_embeddings = p_edge2vec_l2(df_edges, df_node_embeddings)
             df_edge_embeddings.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration), index=False)
 
 def create_graph_data(exp, groups_id, subgroups_id):

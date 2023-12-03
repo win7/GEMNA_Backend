@@ -55,7 +55,7 @@ class ExperimentList(APIView):
         serializer = ExperimentSerializer(data=request.data)
         if serializer.is_valid():
             data = serializer.save()
-            # data = Experiment.objects.get(pk="f02f05f8-bdce-4511-a746-a1e680da9e19")
+            # data = Experiment.objects.get(pk="ed539a71-e25a-4dea-80f8-b78572898fd0")
 
             # run experiment
             """ try:
