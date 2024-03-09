@@ -1,3 +1,6 @@
+import os
+import sys
+
 from tqdm import tqdm
 from sklearn.cluster import KMeans
 from sklearn.metrics.cluster import (
@@ -17,12 +20,37 @@ from torch_geometric.nn import (
 )
 from torch_geometric.loader import NeighborLoader
 from torch_geometric.utils import to_undirected
-from torch.nn import Linear, Sequential, BatchNorm1d, ReLU, Dropout
-
-import pandas as pd
-import torch
+from torch_geometric.nn import Node2Vec
 import torch_geometric.transforms as T
 
+from torch.nn import Linear, Sequential, BatchNorm1d, ReLU, Dropout
+
+import numpy as np
+import pandas as pd
+import time
+import torch
+
+dir = os.getcwd() + "/GNN_Unsupervised"
+print(dir)
+
+class EarlyStopper:
+    def __init__(self, patience=1): # , min_delta=0):
+        self.patience = patience
+        # self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = float('inf')
+
+    def early_stop(self, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+        # elif validation_loss > (self.min_validation_loss + self.min_delta):
+        else:
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
+    
 # custom dataset
 class CustomDataset(InMemoryDataset):
     def __init__(self, nodes_data, edges_data, transform=None):
@@ -60,7 +88,7 @@ class CustomDataset(InMemoryDataset):
         print("Is undirected:\t {}".format(self.data.is_undirected()))
 
 class VGAE_Base(object):
-    def __init__(self, dataset, dimension, device):
+    def __init__(self, dataset, dimension, device, name):
         self.dataset = dataset
         self.train_data, self.val_data, self.test_data = self.dataset[0]
         # self.train_data = self.train_data.to(device, 'x', 'edge_index')
@@ -72,6 +100,8 @@ class VGAE_Base(object):
         self.model = VGAE(self.VariationalGCNEncoder(self.in_channels, self.out_channels)).to(self.device)
         self.model = torch.compile(self.model)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
+        
+        self.name = name
     
     def train(self):
         self.model.train()
@@ -81,7 +111,7 @@ class VGAE_Base(object):
         loss = loss + (1 / self.train_data.num_nodes) * self.model.kl_loss()
         loss.backward()
         self.optimizer.step()
-        return float(loss)
+        return float(loss) # , z
 
     @torch.no_grad()
     def test(self, data):
@@ -90,12 +120,34 @@ class VGAE_Base(object):
         return self.model.test(z, data.pos_edge_label_index, data.neg_edge_label_index)
     
     def fit(self, epochs):
-        loop_obj = tqdm(range(epochs))
+        patience = 5
+        counter = 0
+        best = 1e9
+        embeddings = []
+        losses = []
+        
+        loop_obj = tqdm(range(1, epochs + 1))
         for epoch in loop_obj:
-            loop_obj.set_description(f"Epoch: {epoch + 1}")
+            loop_obj.set_description(f"Epoch: {epoch}")
             
             loss = self.train()
             loop_obj.set_postfix_str(f"Loss: {loss:.4f}")
+            
+            """ losses.append(loss)
+            self.model.eval()
+            with torch.no_grad():
+                z = self.model.encode(self.train_data.x, self.train_data.edge_index)
+                embeddings.append(z.cpu().numpy()) """
+
+            if loss < best:
+                best = loss
+                counter = 0
+                torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_vgae.pkl".foramt(dir))
+            else:
+                counter += 1
+                if counter == patience:
+                    print("Early stopping, epoch: {}".format(epoch))
+                    break
 
             # val_auc, val_ap = self.test(self.test_data)
             """ if epoch % 50 == 0:
@@ -103,11 +155,19 @@ class VGAE_Base(object):
 
         # test_auc, test_ap = self.test(self.test_data)
         # print(f'Test AUC: {test_auc:.4f} | Test AP {test_ap:.4f}')
+        
+        """ array_loss = np.array(losses)
+        np.save("run_details/{}_loss".format(self.name), array_loss)
+        
+        array_embeddings = np.array(embeddings)
+        np.save("run_details/{}_embeddings".format(self.name), array_embeddings) """
 
+    @torch.no_grad()
     def get_node_embeddings(self):
+        self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_vgae.pkl".format(dir)))
         self.model.eval()
         z = self.model.encode(self.train_data.x, self.train_data.edge_index)
-        z = z.detach().cpu().numpy()
+        z = z.cpu().numpy()
         return z
     
     def save_node_embeddings(self, path):
@@ -171,8 +231,9 @@ class VGAE_Base_(object):
 
     def get_node_embeddings(self):
         self.model.eval()
-        z = self.model.encode(self.train_data.x, self.train_data.edge_index)
-        z = z.detach().cpu().numpy()
+        with torch.no_grad():
+            z = self.model.encode(self.train_data.x, self.train_data.edge_index)
+        z = z.cpu().numpy()
         return z
     
     def save_node_embeddings(self, path):
@@ -193,7 +254,7 @@ class VGAE_Base_(object):
             return self.conv_mu(x, edge_index), self.conv_logstd(x, edge_index)
 
 class DGI_Transductive(object):
-    def __init__(self, dataset, dimension, device):
+    def __init__(self, dataset, dimension, device, name):
         self.dataset = dataset
         self.data = self.dataset[0]
         
@@ -208,6 +269,8 @@ class DGI_Transductive(object):
             corruption=self.corruption,
         ).to(device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
+        
+        self.name = name
     
     def train(self):
         self.model.train()
@@ -227,17 +290,52 @@ class DGI_Transductive(object):
         return acc
     
     def fit(self, epochs):
-        for epoch in range(epochs):
+        patience = 5
+        counter = 0
+        best = 1e9
+        embeddings = []
+        losses = []
+        
+        loop_obj = tqdm(range(1, epochs + 1))
+        for epoch in loop_obj:
+            loop_obj.set_description(f"Epoch: {epoch}")
+            
             loss = self.train()
+            loop_obj.set_postfix_str(f"Loss: {loss:.4f}")
+
+            """ losses.append(loss)
+            self.model.eval()
+            with torch.no_grad():
+                z, _, _ = self.model(self.data.x, self.data.edge_index)
+                embeddings.append(z.cpu().numpy()) """
+
+            if loss < best:
+                best = loss
+                counter = 0
+                torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_dgi.pkl".format(dir))
+            else:
+                counter += 1
+                if counter == patience:
+                    print("Early stopping, epoch: {}".format(epoch))
+                    break
+            
             """ if epoch % 50 == 0:
                 print(f'Epoch {epoch:>2} | Loss: {loss:.4f}') """
         # acc = test()
         # print(f'Accuracy: {acc:.4f}')
+        
+        """ array_loss = np.array(losses)
+        np.save("run_details/{}_loss".format(self.name), array_loss)
+        
+        array_embeddings = np.array(embeddings)
+        np.save("run_details/{}_embeddings".format(self.name), array_embeddings) """
 
+    @torch.no_grad()
     def get_node_embeddings(self):
+        self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_dgi.pkl".format(dir)))
         self.model.eval()
         z, _, _ = self.model(self.data.x, self.data.edge_index)
-        z = z.detach().cpu().numpy()
+        z = z.cpu().numpy()
         return z
     
     def save_node_embeddings(self, path):
@@ -314,12 +412,13 @@ class DGI_Inductive(object):
         
     def get_node_embeddings(self):
         self.model.eval()
-        zs = []
-        for batch in self.test_loader:
-            pos_z, _, _ = self.model(batch.x, batch.edge_index, batch.batch_size)
-            zs.append(pos_z.cpu())
-        z = torch.cat(zs, dim=0)
-        z = z.detach().cpu().numpy()
+        with torch.no_grad():
+            zs = []
+            for batch in self.test_loader:
+                pos_z, _, _ = self.model(batch.x, batch.edge_index, batch.batch_size)
+                zs.append(pos_z.cpu())
+            z = torch.cat(zs, dim=0)
+        z = z.cpu().numpy()
         return z
     
     def save_node_embeddings(self, path):
@@ -354,7 +453,7 @@ class DGI_Inductive(object):
             return x[:batch_size]
     
 class ARGVA_Base(object):   
-    def __init__(self, dataset, dimension, device):
+    def __init__(self, dataset, dimension, device, name):
         self.dataset = dataset
         self.train_data, self.val_data, self.test_data = self.dataset[0]
         
@@ -369,7 +468,9 @@ class ARGVA_Base(object):
 
         self.encoder_optimizer = torch.optim.Adam(self.encoder.parameters(), lr=0.005)
         self.discriminator_optimizer = torch.optim.Adam(self.discriminator.parameters(), lr=0.001)
-    
+
+        self.name = name
+        
     def train(self):
         self.model.train()
         self.encoder_optimizer.zero_grad()
@@ -408,16 +509,50 @@ class ARGVA_Base(object):
         return auc, ap, completeness, hm, nmi
     
     def fit(self, epochs):
-        for epoch in range(epochs):
+        patience = 5
+        counter = 0
+        best = 1e9
+        embeddings = []
+        losses = []
+        
+        loop_obj = tqdm(range(1, epochs + 1))
+        for epoch in loop_obj:
+            loop_obj.set_description(f"Epoch: {epoch}")
+            
             loss = self.train()
+            loop_obj.set_postfix_str(f"Loss: {loss:.4f}")
+
+            """ self.model.eval()
+            with torch.no_grad():
+                z = self.model.encode(self.train_data.x, self.train_data.edge_index)
+                embeddings.append(z.cpu().numpy()) """
+
+            if loss < best:
+                best = loss
+                counter = 0
+                torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_argva.pkl".format(dir))
+            else:
+                counter += 1
+                if counter == patience:
+                    print("Early stopping, epoch: {}".format(epoch))
+                    break
+            
             # auc, ap, completeness, hm, nmi = test(test_data)
             """ if epoch % 50 == 0:
                 print(f'Epoch {epoch:>2} | Loss: {loss:.4f}') """
+                
+            """ array_loss = np.array(losses)
+            np.save("run_details/{}_loss".format(self.name), array_loss)
+            
+            array_embeddings = np.array(embeddings)
+            np.save("run_details/{}_embeddings".format(self.name), array_embeddings) """
 
+    @torch.no_grad()
     def get_node_embeddings(self):
+        self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_argva.pkl".format(dir)))
         self.model.eval()
         z = self.model.encode(self.train_data.x, self.train_data.edge_index)
-        z = z.detach().cpu().numpy()
+        z = z.cpu().numpy()
         return z
     
     def save_node_embeddings(self, path):
@@ -450,7 +585,7 @@ class ARGVA_Base(object):
             return self.lin3(x)
 
 class VGAE_Linear(object):   
-    def __init__(self, dataset, dimension, device):
+    def __init__(self, dataset, dimension, device, name):
         self.dataset = dataset
         self.train_data, self.val_data, self.test_data = self.dataset[0]
         
@@ -460,7 +595,9 @@ class VGAE_Linear(object):
         self.device = device
         self.model = VGAE(self.VariationalLinearEncoder(self.in_channels, self.out_channels)).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
-            
+        
+        self.name = name
+
     def train(self):
         self.model.train()
         self.optimizer.zero_grad()
@@ -478,19 +615,54 @@ class VGAE_Linear(object):
         return self.model.test(z, data.pos_edge_label_index, data.neg_edge_label_index)
     
     def fit(self, epochs):
-        for epoch in range(epochs):
+        patience = 5
+        counter = 0
+        best = 1e9
+        embeddings = []
+        losses = []
+        
+        loop_obj = tqdm(range(1, epochs + 1))
+        for epoch in loop_obj:
+            loop_obj.set_description(f"Epoch: {epoch}")
+            
             loss = self.train()
+            loop_obj.set_postfix_str(f"Loss: {loss:.4f}")
+
+            """ losses.append(loss)
+            self.model.eval()
+            with torch.no_grad():
+                z = self.model.encode(self.train_data.x, self.train_data.edge_index)
+                embeddings.append(z.cpu().numpy()) """
+
+            if loss < best:
+                best = loss
+                counter = 0
+                torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_lvgae.pkl".format(dir))
+            else:
+                counter += 1
+                if counter == patience:
+                    print("Early stopping, epoch: {}".format(epoch))
+                    break
+            
             # val_auc, val_ap = test(test_data)
             """ if epoch % 50 == 0:
                 print(f'Epoch {epoch:>2} | Loss: {loss:.4f}') # | Val AUC: {val_auc:.4f} | Val AP: {val_ap:.4f}') """
 
         # test_auc, test_ap = test(test_data)
         # print(f'Test AUC: {test_auc:.4f} | Test AP {test_ap:.4f}')
+        
+        """ array_loss = np.array(losses)
+        np.save("run_details/{}_loss".format(self.name), array_loss)
+        
+        array_embeddings = np.array(embeddings)
+        np.save("run_details/{}_embeddings".format(self.name), array_embeddings) """
 
+    @torch.no_grad()
     def get_node_embeddings(self):
+        self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_lvgae.pkl".format(dir)))
         self.model.eval()
         z = self.model.encode(self.train_data.x, self.train_data.edge_index)
-        z = z.detach().cpu().numpy()
+        z = z.cpu().numpy()
         return z
     
     def save_node_embeddings(self, path):
@@ -507,3 +679,71 @@ class VGAE_Linear(object):
 
         def forward(self, x, edge_index):
             return self.conv_mu(x, edge_index), self.conv_logstd(x, edge_index)
+
+class Node2VecBase(object):
+    def __init__(self, p, q, dataset, dimension, device):
+        self.dataset = dataset
+        self.data = self.dataset[0]
+
+        self.device = device
+        self.model = Node2Vec(
+            self.data.edge_index,
+            embedding_dim=dimension,
+            walk_length=20,
+            context_size=10,
+            walks_per_node=10,
+            num_negative_samples=1,
+            p=p,
+            q=q,
+            sparse=True,
+        ).to(self.device)
+        self.model = torch.compile(self.model)
+        
+        num_workers = 4 if sys.platform == 'linux' else 0
+        self.loader = self.model.loader(batch_size=128, shuffle=True, num_workers=num_workers)
+        self.optimizer = torch.optim.SparseAdam(list(self.model.parameters()), lr=0.01)
+            
+    def train(self):
+        self.model.train()
+        total_loss = 0
+        for pos_rw, neg_rw in self.loader:
+            self.optimizer.zero_grad()
+            loss = self.model.loss(pos_rw.to(self.device), neg_rw.to(self.device))
+            loss.backward()
+            self.optimizer.step()
+            total_loss += loss.item()
+        return total_loss / len(self.loader)
+
+    @torch.no_grad()
+    def test(self, data):
+        self.model.eval()
+        z = self.model()
+        """ acc = self.model.test(
+            train_z=z[data.train_mask],
+            train_y=data.y[data.train_mask],
+            test_z=z[data.test_mask],
+            test_y=data.y[data.test_mask],
+            max_iter=150,
+        )
+        return acc """
+        return None
+    
+    def fit(self, epochs):
+        loop_obj = tqdm(range(epochs))
+        for epoch in loop_obj:
+            loop_obj.set_description(f"Epoch: {epoch}")
+            
+            loss = self.train()
+            loop_obj.set_postfix_str(f"Loss: {loss:.4f}")
+            
+    @torch.no_grad()
+    def get_node_embeddings(self):
+        self.model.eval()
+        z = self.model().cpu().numpy()
+        return z
+    
+    def save_node_embeddings(self, path):
+        z = self.get_node_embeddings()
+        
+        df_node_embeddings = pd.DataFrame(data=z)
+        df_node_embeddings.to_csv(path, index=True)

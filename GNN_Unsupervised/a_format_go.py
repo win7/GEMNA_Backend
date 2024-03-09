@@ -3,7 +3,7 @@
 
 # ### Imports
 
-# In[42]:
+# In[17]:
 
 
 import json
@@ -21,7 +21,7 @@ print(dir)
 def main(experiment):
     # ### Parameters
 
-    # In[43]:
+    # In[18]:
 
 
     params = {
@@ -55,8 +55,7 @@ def main(experiment):
 
     # ### Load dataset
 
-    # In[45]:
-
+    # In[21]:
 
     # load dataset groups
     df_raw = pd.read_csv("{}".format(params["raw_data_file"]), delimiter="|")
@@ -66,7 +65,7 @@ def main(experiment):
 
     # ### Format dataset
 
-    # In[46]:
+    # In[22]:
 
 
     # has transformation
@@ -78,7 +77,7 @@ def main(experiment):
     df_raw
 
 
-    # In[47]:
+    # In[23]:
 
 
     # concat
@@ -88,7 +87,7 @@ def main(experiment):
     df_join_raw
 
 
-    # In[48]:
+    # In[24]:
 
 
     # split
@@ -97,7 +96,7 @@ def main(experiment):
     df_join_raw
 
 
-    # In[49]:
+    # In[25]:
 
 
     # get groups name
@@ -109,7 +108,7 @@ def main(experiment):
     groups_id
 
 
-    # In[50]:
+    # In[26]:
 
 
     # get subgroups names
@@ -117,7 +116,7 @@ def main(experiment):
     subgroups_id
 
 
-    # In[51]:
+    # In[27]:
 
 
     # get groups combination
@@ -134,7 +133,7 @@ def main(experiment):
 
     # ### Create folders
 
-    # In[52]:
+    # In[28]:
 
 
     # create experiments folder
@@ -157,7 +156,7 @@ def main(experiment):
 
     # ### Save dataset and parameters
 
-    # In[53]:
+    # In[29]:
 
 
     # save dataset
@@ -188,7 +187,7 @@ def main(experiment):
         json.dump(parameters, outfile, indent=4)
 
 
-    # In[54]:
+    # In[30]:
 
 
     """ experiments = {

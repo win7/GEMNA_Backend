@@ -3,7 +3,7 @@
 
 # ### Imports
 
-# In[4]:
+# In[1]:
 
 
 import json
@@ -23,7 +23,7 @@ print(dir)
 def main(experiment):
     # ### Parameters
 
-    # In[5]:
+    # In[2]:
 
 
     """ file = open("exp.json")
@@ -55,7 +55,7 @@ def main(experiment):
 
     # ### Biocyc
 
-    # In[6]:
+    # In[3]:
 
 
     # load raw data
@@ -89,6 +89,6 @@ def main(experiment):
                 # df_biocyc = df_biocyc.iloc[:, 1:]
                 df_biocyc.to_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(dir, exp, method, "-".join(group), option), index=False, sep="\t") # header=False
                 
-                """ df_biocyc = pd.read_csv("output/{}/biocyc/biocyc_{}_{}_{}.csv".format(exp, method, "-".join(group), option),
+                """ df_biocyc = pd.read_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(dir, exp, method, "-".join(group), option),
                         names=["Metabolite name", "Average Mz", "Alignment ID", group[0], group[1], "Ratio"], sep="\t") # header=None """
 

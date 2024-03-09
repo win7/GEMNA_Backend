@@ -3,7 +3,7 @@
 
 # ### Imports
 
-# In[4]:
+# In[5]:
 
 
 import json
@@ -24,14 +24,13 @@ print(dir)
 def main(experiment):
     # ### Parameters
 
-    # In[5]:
+    # In[6]:
 
 
     """ file = open("exp.json")
     experiment = json.load(file)
     exp_num = experiment["exp"] """
     exp_num = str(experiment.id) # experiment["exp"]
-
 
     file = open("{}/output/{}/parameters.json".format(dir, exp_num))
     params = json.load(file)
@@ -61,9 +60,16 @@ def main(experiment):
     print("Groups:\t\t", groups)
 
 
+    # In[7]:
+
+
+    # methods.insert(0, "greedy") # delete it in production
+    # methods
+
+
     # ### Changes detection
 
-    # In[6]:
+    # In[8]:
 
 
     # read raw data
@@ -71,7 +77,7 @@ def main(experiment):
     df_join_raw.head()
     list_details = []
 
-    for method in methods: # change
+    for method in methods: # change            
         for data_variation in data_variations: # change
             for group in groups: # change
                 # read edges
@@ -107,7 +113,7 @@ def main(experiment):
                 p_value = 2 * (1 - scipy.stats.norm.cdf(np.abs(ztest), loc=0, scale=1))
                 df_change["p-value"] = p_value
 
-                # get sigtnificant
+                # get significant
                 list_significant = []
                 for row in df_change.itertuples():
                     # print(row[3], row[5], row[8])

@@ -18,7 +18,7 @@ from django.conf import settings
 from utils.response import Resp
 # from utils.utils_v1 import info_graph
 
-from GNN_Unsupervised import experiments as exper
+from GNN_Unsupervised import experiments as experiment
 
 # from multiprocessing import Process
 import multiprocessing as mp
@@ -68,7 +68,7 @@ class ExperimentList(APIView):
             # ctx = mp.get_context("spawn")
             
             # mp1.set_start_method('spawn', force=True)
-            t1 = mp.Process(target=exper.main, args=(data,))
+            t1 = mp.Process(target=experiment.main, args=(data,))
             # starting threads
             t1.start()
             # wait until all threads finish

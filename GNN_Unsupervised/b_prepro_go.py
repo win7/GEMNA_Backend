@@ -3,7 +3,7 @@
 
 # ### Imports
 
-# In[36]:
+# In[18]:
 
 
 import json
@@ -15,16 +15,27 @@ from GNN_Unsupervised.utils.utils_go import *
 
 # %load_ext autotime
 
+
+# In[19]:
+
+
+import pandas as pd
+import pingouin as pg
+import numpy as np
+import seaborn as sn
+print(pg.__version__) # 0.5.3
+print(pd.__version__) # 2.0.3
+print(np.__version__) # 1.24.3
+print(sn.__version__) # 0.13.0
+
+
 dir = os.getcwd() + "/GNN_Unsupervised"
 print(dir)
 
 def main(experiment):
-    # file = open("exp.json")
-    # experiment = json.load(file)
-    # exp_num = experiment["exp"]
     # ### Parameters
 
-    # In[37]:
+    # In[20]:
 
 
     """ file = open("exp.json")
@@ -53,7 +64,7 @@ def main(experiment):
 
     # ### Load dataset
 
-    # In[38]:
+    # In[21]:
 
 
     # load dataset groups
@@ -62,7 +73,7 @@ def main(experiment):
     df_join_raw
 
 
-    # In[39]:
+    # In[22]:
 
 
     check_dataset(df_join_raw)
@@ -70,7 +81,18 @@ def main(experiment):
 
     # ### Generate graphs
 
-    # In[40]:
+    # In[23]:
+
+
+    """ from sklearn import preprocessing
+
+    X_scaled = preprocessing.RobustScaler().fit_transform(df_join_raw)
+
+    df_join_raw_log = pd.DataFrame(X_scaled, columns=df_join_raw.columns)
+    df_join_raw_log """
+
+
+    # In[24]:
 
 
     # logarithm
@@ -83,13 +105,13 @@ def main(experiment):
     df_join_raw_log.head()
 
 
-    # In[41]:
+    # In[25]:
 
 
     check_dataset(df_join_raw_log)
 
 
-    # In[42]:
+    # In[26]:
 
 
     # split graph in groups and subgroups
@@ -98,13 +120,13 @@ def main(experiment):
     list_df_groups_subgroups[0][0].head()
 
 
-    # In[43]:
+    # In[27]:
 
 
     check_dataset(list_df_groups_subgroups[0][0])
 
 
-    # In[44]:
+    # In[28]:
 
 
     # transpose
@@ -112,13 +134,13 @@ def main(experiment):
     list_groups_subgroups_t[0][0]
 
 
-    # In[45]:
+    # In[29]:
 
 
     check_dataset(list_groups_subgroups_t[0][0])
 
 
-    # In[46]:
+    # In[30]:
 
 
     # correlation matrix
@@ -127,13 +149,13 @@ def main(experiment):
     list_groups_subgroups_t_corr[0][0].head()
 
 
-    # In[47]:
+    # In[31]:
 
 
     check_dataset(list_groups_subgroups_t_corr[0][0])
 
 
-    # In[48]:
+    # In[32]:
 
 
     # build graph (corpus graphs)
@@ -144,10 +166,10 @@ def main(experiment):
     list_groups_subgroups_t_corr_g[0][0]
 
 
-    # In[49]:
+    # In[33]:
 
 
-    # create dataset - nodes/edge data for DGL framework
+    # create dataset - nodes/edge data for PyTorch Geometric/DGL framework
 
     for data_variation in data_variations:
         if data_variation == "none":
@@ -158,7 +180,7 @@ def main(experiment):
             create_graph_data_other_go_features(exp, groups_id, subgroups_id, data_variation, list_df_groups_subgroups)
 
 
-    # In[50]:
+    # In[34]:
 
 
     # details
@@ -182,6 +204,6 @@ def main(experiment):
     df_details = pd.DataFrame(list_details, columns=["Group", "Subgroup", "Num. nodes", "Num. edges", "Density"])
     df_details.to_csv("{}/output/{}/preprocessing/graphs_data/summary.csv".format(dir, exp), index=False)
 
-    """ df_details = pd.read_csv("output/{}/preprocessing/graphs_data/summary.csv".format(exp))
+    """ df_details = pd.read_csv("{}/output/{}/preprocessing/graphs_data/summary.csv".format(dir, exp))
     df_details """
 

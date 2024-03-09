@@ -3,10 +3,11 @@
 
 # ### Imports
 
-# In[16]:
+# In[10]:
 
 
 import json
+import time
 
 from pyod.models.ecod import ECOD
 from tqdm import tqdm
@@ -27,7 +28,7 @@ from unsupervised_models.models import *
 # %load_ext autotime
 
 
-# In[17]:
+# In[11]:
 
 
 torch.manual_seed(0)
@@ -37,7 +38,7 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
 
-# In[18]:
+# In[12]:
 
 
 import torch
@@ -51,14 +52,14 @@ print(dir)
 def main(experiment):
     # ### Parameters
 
-    # In[19]:
+    # In[13]:
 
 
     """ file = open("exp.json")
     experiment = json.load(file)
     exp_num = experiment["exp"] """
     exp_num = str(experiment.id)
-
+    
     file = open("{}/output/{}/parameters.json".format(dir, exp_num))
     params = json.load(file)
 
@@ -92,7 +93,7 @@ def main(experiment):
 
     # ### Node-Edge embeddings
 
-    # In[20]:
+    # In[14]:
 
 
     # read raw data
@@ -105,17 +106,24 @@ def main(experiment):
     df_join_raw_log.head()
 
     epochs = 50 # change
-    cuda = 3    # change
+    cuda = 0    # change
     device = torch.device('cuda:{}'.format(cuda) if torch.cuda.is_available() else 'cpu')
     print(device)
 
+    runtimes = []
+
     # node-embeddings + edge-embeddings
     for method in methods: # change
-        for data_variation in data_variations: # change   
-            for iteration in range(iterations):
+        for data_variation in data_variations: # change
+            print(method, data_variation)
+            time_node_embedding = 0
+            time_edge_embedding = 0
+            for iteration in range(1, iterations + 1):
                 # ---
                 # Node embeddings
                 # ---
+                print("Node-embeddings")
+                start = time.time()
                 subgroups_id = subgroups_id_.copy()
                 
                 torch.manual_seed(seeds[iteration])
@@ -131,21 +139,22 @@ def main(experiment):
                         nodes_data = pd.read_csv("{}/output/{}/preprocessing/graphs_data/nodes_data_{}_{}.csv".format(dir, exp, group, subgroup)).iloc[:, 2:]
                         edges_data = pd.read_csv("{}/output/{}/preprocessing/graphs_data/edges_data_{}_{}.csv".format(dir, exp, group, subgroup))
 
-                        if method == "dgi":
+                        if method == "dgi_":
                             data = CustomDatasetDGI("g_{}_{}".format(group, subgroup), nodes_data, edges_data)
                             graph = data[0]
                             
                             args_ = args_dgi(dimension)
                             train_dgi(exp, graph, args_, method, group, subgroup, iteration)
                         
-                        elif method == "dgi-tran":
+                        elif method == "dgi": # dgi-tran
                             transform = T.Compose([
-                                # T.NormalizeFeatures(), #
+                                T.NormalizeFeatures(),
                                 T.ToDevice(device),
                                 # T.RandomLinkSplit(num_val=0.05, num_test=0.1, is_undirected=True, split_labels=True, add_negative_train_samples=False),
                             ])
+                            name = "{}_{}_{}_{}_{}".format(dir, exp, method, group, subgroup, iteration)
                             dataset = CustomDataset(nodes_data, edges_data, transform=transform)
-                            model = DGI_Transductive(dataset, dimension, device)
+                            model = DGI_Transductive(dataset, dimension, device, name)
                             model.fit(epochs=epochs)
                             model.save_node_embeddings("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration))
                         
@@ -155,7 +164,7 @@ def main(experiment):
                             model.fit(epochs=epochs)
                             model.save_node_embeddings("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration))
                             
-                        elif method == "vgae old":
+                        elif method == "vgae_":
                             data = CustomDatasetVGAE("g_{}_{}".format(group, subgroup), nodes_data, edges_data)
                             graph = data[0]
 
@@ -163,45 +172,88 @@ def main(experiment):
                             args_ = args_vgae(dimension)
                             train_vgae(exp, graph, args_, method, group, subgroup, iteration)
                             
-                        elif method == "vgae":
+                        elif method == "vgae": # vgae-base
                             transform = T.Compose([
-                                # T.NormalizeFeatures(), #
+                                T.NormalizeFeatures(),
                                 T.ToDevice(device),
                                 T.RandomLinkSplit(num_val=0.05, num_test=0.1, is_undirected=True, split_labels=True, add_negative_train_samples=False),
                             ])
+                            name = "{}_{}_{}_{}_{}".format(dir, exp, method, group, subgroup, iteration)
                             dataset = CustomDataset(nodes_data, edges_data, transform=transform)
-                            model = VGAE_Base(dataset, dimension, device)
+                            model = VGAE_Base(dataset, dimension, device, name)
                             model.fit(epochs=epochs)
                             model.save_node_embeddings("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration))
 
                         elif method == "vgae-line":
                             transform = T.Compose([
-                                # T.NormalizeFeatures(), #
+                                T.NormalizeFeatures(),
                                 T.ToDevice(device),
                                 T.RandomLinkSplit(num_val=0.05, num_test=0.1, is_undirected=True, split_labels=True, add_negative_train_samples=False),
                             ])
+                            name = "{}_{}_{}_{}_{}".format(dir, exp, method, group, subgroup, iteration)
                             dataset = CustomDataset(nodes_data, edges_data, transform=transform)
-                            model = VGAE_Linear(dataset, dimension, device)
+                            model = VGAE_Linear(dataset, dimension, device, name)
                             model.fit(epochs=epochs)
                             model.save_node_embeddings("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration))
                         
                         elif method == "argva-base":
                             transform = T.Compose([
-                                # T.NormalizeFeatures(), #
+                                T.NormalizeFeatures(),
                                 T.ToDevice(device),
                                 T.RandomLinkSplit(num_val=0.05, num_test=0.1, is_undirected=True,
                                                 split_labels=True, add_negative_train_samples=False),
                             ])
+                            name = "{}_{}_{}_{}_{}".format(dir, exp, method, group, subgroup, iteration)
                             dataset = CustomDataset(nodes_data, edges_data, transform=transform)
-                            model = ARGVA_Base(dataset, dimension, device)
+                            model = ARGVA_Base(dataset, dimension, device, name)
                             model.fit(epochs=epochs)
                             model.save_node_embeddings("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration))
-                    
+
+                        elif method == "deep-walk":
+                            p = 1.0
+                            q = 1.0
+                            transform = T.Compose([
+                                T.ToDevice(device)
+                            ])
+                            dataset = CustomDataset(nodes_data, edges_data, transform=transform)                            
+                            model = Node2VecBase(p, q, dataset, dimension, device)
+                            model.fit(epochs=epochs)
+                            model.save_node_embeddings("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration))
+
+                        elif method == "node2vec15":
+                            p = 1.0
+                            q = 0.5
+                            transform = T.Compose([
+                                T.ToDevice(device)
+                            ])
+                            dataset = CustomDataset(nodes_data, edges_data, transform=transform)                            
+                            model = Node2VecBase(p, q, dataset, dimension, device)
+                            model.fit(epochs=epochs)
+                            model.save_node_embeddings("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration))
+
+                        elif method == "node2vec12":
+                            p = 1.0
+                            q = 2.0
+                            transform = T.Compose([
+                                T.ToDevice(device)
+                            ])
+                            dataset = CustomDataset(nodes_data, edges_data, transform=transform)                            
+                            model = Node2VecBase(p, q, dataset, dimension, device)
+                            model.fit(epochs=epochs)
+                            model.save_node_embeddings("{}/output/{}/node_embeddings/node-embeddings_{}_{}_{}_{}.csv".format(dir, exp, method, group, subgroup, iteration))
+                
+                end = time.time()
+                elapsed = end - start
+                time_node_embedding += elapsed
+                
+                torch.cuda.empty_cache()
+        
                 # ---
                 # Edge embeddings
                 # ---
+                print("Edge-embeddings")
+                start = time.time()
                 subgroups_id = subgroups_id_.copy()
-                print(method, data_variation)
                 
                 if data_variation != "none":
                     subgroups_id_op = {}
@@ -209,10 +261,11 @@ def main(experiment):
                         subgroups_id_op[group] = [data_variation]
                 else:
                     subgroups_id_op = subgroups_id
-                print("Subgroups id op:", subgroups_id_op)
+                # print("Subgroups id op:", subgroups_id_op)
                 
                 edge_embeddings_global(exp, method, groups_id, subgroups_id_op, iteration)
                 
+                dict_df_edge_embeddings_concat = {}
                 for group in tqdm(groups_id):
                     df_edge_embeddings_concat = pd.DataFrame()
                     k = 0
@@ -222,18 +275,23 @@ def main(experiment):
                         df_edge_embeddings_concat = pd.concat([df_edge_embeddings_concat, df_edge_embeddings])
                         k += 1
                     
-                    df_edge_embeddings_concat.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}_{}.csv".format(dir, exp, method, group, data_variation, iteration), index=False)
+                    # df_edge_embeddings_concat.to_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}_{}.csv".format(dir, exp, method, group, data_variation, iteration), index=False)
+                    dict_df_edge_embeddings_concat[group] = df_edge_embeddings_concat
                         
-                # outlier detection (ECOD)
+                # ---
+                # Outlier detection (ECOD)
+                # ---
+                print("Outlier detection")
                 # dict_df_edge_embeddings_concat_outlier = {}
                 dict_df_edge_embeddings_concat_filter = {}
 
                 for group in tqdm(groups_id):
-                    df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}_{}.csv".format(dir, exp, method, group, data_variation, iteration))
-
+                    # df_edge_embeddings_concat = pd.read_csv("{}/output/{}/edge_embeddings/edge-embeddings_concat_{}_{}_{}_{}.csv".format(dir, exp, method, group, data_variation, iteration))
+                    df_edge_embeddings_concat = dict_df_edge_embeddings_concat[group]
+                    
                     X_train = df_edge_embeddings_concat.iloc[:, 2:-1]
 
-                    clf = ECOD()
+                    clf = ECOD(contamination=0.05, n_jobs=1)
                     clf.fit(X_train)
 
                     X_train["labels"] = clf.labels_ # binary labels (0: inliers, 1: outliers)
@@ -304,16 +362,38 @@ def main(experiment):
                     
                     df_edge_embeddings_concat_filter.sort_values(["source", "target"], ascending=True, inplace=True)
                     df_edge_embeddings_concat_filter.to_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}_{}.csv".format(dir, exp, method, group, data_variation, iteration), index=False)
+                
+                end = time.time()
+                elapsed = end - start
+                time_edge_embedding += elapsed
+            
+            runtimes.append([method, data_variation, time_node_embedding / iterations, time_edge_embedding / iterations])
+
+    # save runtimes
+    df_runtimes = pd.DataFrame(runtimes, columns=["Method", "Data variation", "Runtime node embedding", "Runtime edge embedding"])
+    df_runtimes.to_csv("{}/output/{}/common_edges/runtimes.csv".format(dir, exp), index=False)
 
 
-    # In[21]:
+    # In[15]:
 
 
     # import IPython
     # IPython.Application.instance().kernel.do_shutdown(True)
 
 
-    # In[22]:
+    # In[16]:
+
+
+    # torch.cuda.empty_cache()
+
+
+    # In[17]:
+
+
+    # del dataset # data, model, optimizer
+
+
+    # In[18]:
 
 
     # join
@@ -327,7 +407,7 @@ def main(experiment):
         
             for data_variation in data_variations:
                 list_common_subgraph = []
-                for iteration in range(iterations):
+                for iteration in range(1, iterations + 1):
                     df_edges_filter_weight_filter = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}_{}.csv".format(dir, exp, method, group, data_variation, iteration))
                     # print(df_edges_filter_weight_filter)
 
