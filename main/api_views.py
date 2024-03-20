@@ -225,21 +225,38 @@ class ExperimentConsult(APIView):
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", # *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
                                             edge_attr=["label"], create_using=nx.DiGraph())
                 
-                # get neighbors
-                print(list(H.degree(nodes)))
+                # get neighbors                
                 if plot == "correlation_neighbors":
+                    # option 1: 
+                    """ aux_nodes = nodes.copy()
+                    for node in aux_nodes:
+                        nodes += list(H.neighbors(node)) """
+                    
+                    # option 1: 
+                    list_graph = []
                     aux_nodes = nodes.copy()
                     for node in aux_nodes:
-                        nodes += list(H.neighbors(node))
-                print(len(nodes))
-                
-                HF = H.subgraph(nodes) # H.subgraph(nodes) or H # graph or subgraph
+                        H_ = nx.ego_graph(H, node)
+                        list_graph.append(H_)
+                        
+                    C = nx.compose_all(list_graph)
+                    
+                    # delete edges
+                    edges = list(C.edges())
+                    for edge in edges:
+                        if not edge[0] in nodes and not edge[1] in nodes:
+                            C.remove_edge(*edge)
+                    
+                    HF = C.copy() # H.subgraph(nodes) # H.subgraph(nodes) or H # graph or subgraph or C (compose graph)
+                else:
+                    HF = H.subgraph(nodes)
+                    
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
                 # print(df_change_filter_sub)
 
                 # degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
                 # degrees = np.array([[int(node), val] for (node, val) in HF.degree()]) # H.degree (all), HF.degree (part)
-                degrees = np.array(list(H.degree(nodes)))
+                degrees = np.array(list(H.degree(nodes))) # before 
                 degrees = degrees[degrees[:, 0].argsort()]
                 # print(degrees)
 
