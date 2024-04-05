@@ -120,7 +120,7 @@ def main(experiment):
                     if row[8] < alpha:
                         list_significant.append("*")
                     elif row[8] >= alpha:
-                        list_significant.append("")
+                        list_significant.append("-")
                     elif np.isnan(row[3]) or np.isnan(row[5]):
                         list_significant.append("*")
                     else:

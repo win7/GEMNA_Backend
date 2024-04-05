@@ -18,7 +18,7 @@ from django.conf import settings
 from utils.response import Resp
 # from utils.utils_v1 import info_graph
 
-from GNN_Unsupervised import experiments as experiment
+from GNN_Unsupervised import experiments as run_experiment
 
 # from multiprocessing import Process
 import multiprocessing as mp
@@ -34,6 +34,9 @@ import numpy as np
 import os
 
 values = ['PP', 'Pp', 'PN', 'Pn', 'P?', 'pP', 'pp', 'pN', 'pn', 'p?', 'NP', 'Np', 'NN', 'Nn', 'N?', 'nP', 'np', 'nN', 'nn', 'n?', '?P', '?p', '?N', '?n']
+
+values_Diff = ['Pp', 'PN', 'Pn', 'P?', 'pP', 'pN', 'pn', 'p?', 'NP', 'Np', 'Nn', 'N?', 'nP', 'np', 'nN', 'n?', '?P', '?p', '?N', '?n']
+values_SIM = ['PP', 'pp','NN', 'nn']
 
 class ExperimentList(APIView):
     """
@@ -68,7 +71,7 @@ class ExperimentList(APIView):
             # ctx = mp.get_context("spawn")
             
             # mp1.set_start_method('spawn', force=True)
-            t1 = mp.Process(target=experiment.main, args=(data,))
+            t1 = mp.Process(target=run_experiment.main, args=(data,))
             # starting threads
             t1.start()
             # wait until all threads finish
@@ -210,7 +213,13 @@ class ExperimentConsult(APIView):
                 print(df_change_filter)
                 # df_change_filter = df_change_filter.iloc[:, [0, 1, 4]]
                 # print(df_change_filter.iloc[:20,:])
-
+                
+                # Filter by significant correlations
+                # df_change_filter_all = df_change[df_change["significant"] == "*"]
+                # df_change_filter_all = df_change_filter[df_change_filter["significant"] == "*" & df_change_filter["label"].in(values_Diff) | ([df_change_filter["significant"] == "" & df_change_filter["label"].in(values_SIM)))
+                df_change_filter = df_change_filter[((df_change_filter["significant"] == "*") & (df_change_filter["label"].str[0] != df_change_filter["label"].str[1])) | 
+                                                    ((df_change_filter["significant"] == "-") & (df_change_filter["label"].str[0] == df_change_filter["label"].str[1]))]
+                
                 """ key_subgraph = {
                     "id": [0, 1, 4],
                     "mz": [5, 6, 4],

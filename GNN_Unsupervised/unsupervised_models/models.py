@@ -142,7 +142,7 @@ class VGAE_Base(object):
             if loss < best:
                 best = loss
                 counter = 0
-                torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_vgae.pkl".foramt(dir))
+                # torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_vgae.pkl".foramt(dir))
             else:
                 counter += 1
                 if counter == patience:
@@ -164,7 +164,7 @@ class VGAE_Base(object):
 
     @torch.no_grad()
     def get_node_embeddings(self):
-        self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_vgae.pkl".format(dir)))
+        # self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_vgae.pkl".format(dir)))
         self.model.eval()
         z = self.model.encode(self.train_data.x, self.train_data.edge_index)
         z = z.cpu().numpy()
@@ -312,7 +312,7 @@ class DGI_Transductive(object):
             if loss < best:
                 best = loss
                 counter = 0
-                torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_dgi.pkl".format(dir))
+                # torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_dgi.pkl".format(dir))
             else:
                 counter += 1
                 if counter == patience:
@@ -332,7 +332,7 @@ class DGI_Transductive(object):
 
     @torch.no_grad()
     def get_node_embeddings(self):
-        self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_dgi.pkl".format(dir)))
+        # self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_dgi.pkl".format(dir)))
         self.model.eval()
         z, _, _ = self.model(self.data.x, self.data.edge_index)
         z = z.cpu().numpy()
@@ -530,7 +530,7 @@ class ARGVA_Base(object):
             if loss < best:
                 best = loss
                 counter = 0
-                torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_argva.pkl".format(dir))
+                # torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_argva.pkl".format(dir))
             else:
                 counter += 1
                 if counter == patience:
@@ -549,7 +549,7 @@ class ARGVA_Base(object):
 
     @torch.no_grad()
     def get_node_embeddings(self):
-        self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_argva.pkl".format(dir)))
+        # self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_argva.pkl".format(dir)))
         self.model.eval()
         z = self.model.encode(self.train_data.x, self.train_data.edge_index)
         z = z.cpu().numpy()
@@ -637,7 +637,7 @@ class VGAE_Linear(object):
             if loss < best:
                 best = loss
                 counter = 0
-                torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_lvgae.pkl".format(dir))
+                # torch.save(self.model.state_dict(), "{}/unsupervised_models/best/best_lvgae.pkl".format(dir))
             else:
                 counter += 1
                 if counter == patience:
@@ -659,7 +659,7 @@ class VGAE_Linear(object):
 
     @torch.no_grad()
     def get_node_embeddings(self):
-        self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_lvgae.pkl".format(dir)))
+        # self.model.load_state_dict(torch.load("{}/unsupervised_models/best/best_lvgae.pkl".format(dir)))
         self.model.eval()
         z = self.model.encode(self.train_data.x, self.train_data.edge_index)
         z = z.cpu().numpy()
