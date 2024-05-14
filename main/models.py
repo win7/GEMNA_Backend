@@ -5,8 +5,10 @@ import uuid
 # Create your models here.
 
 method_choice = (
-	("dgi", "DGI"), 
-	("vgae", "VGAE")
+    ("vgae-line", "LVGAE"),
+	("vgae-base", "VGAE"),
+	("argva-base", "ARGVA"),
+	("dgi-tran", "DGI"), 
 )
 
 option_choice = (
@@ -26,10 +28,10 @@ class Experiment(models.Model):
 	id = models.UUIDField("Id", primary_key=True, default=uuid.uuid4, editable=False)
 	created_at = models.DateTimeField("Created", auto_now_add=True)
 	updated_at = models.DateTimeField("Updated", auto_now=True)
-	method = models.CharField("Method", choices=method_choice, default=method_choice[0][0], max_length=4)
+	method = models.CharField("Method", choices=method_choice, default=method_choice[0][0], max_length=15)
 	data_variation = models.CharField("Dataset variation", choices=option_choice, default=option_choice[0][0], max_length=4)
 	dimension = models.IntegerField("Dimension", default=3)
-	raw_data = models.FileField("Raw data", upload_to='GNN_Unsupervised/raw_data/', blank=False, null=False)
+	raw_data = models.FileField("Raw data", upload_to='experiments/raw_data/', blank=False, null=False)
 	control = models.CharField("control", max_length=64)
 	range = models.IntegerField("Range", default=0)
 	alpha = models.FloatField("Alpha", default=0.05)

@@ -1,3 +1,3 @@
 # MetaNet_DRF
 
-port
+Python=3.10

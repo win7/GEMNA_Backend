@@ -18,6 +18,22 @@ from django.conf import settings
 from utils.response import Resp
 # from utils.utils_v1 import info_graph
 
+import sys
+import os
+""" path = "/home/ealvarez/Project"
+if not path in sys.path:
+    sys.path.append(path) """
+""" path = "/home/ealvarez/Project/GNN_Unsupervised"
+if not path in sys.path:
+    sys.path.append(path) """
+
+import sys
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join("", "/home/ealvarez/Project"))
+sys.path.append(os.path.join("", "/home/ealvarez/Project/GNN_Unsupervised"))
+# sys.path.append(os.path.join(BASE_DIR, "/home/ealvarez/Project/GNN_Unsupervised/utils"))
 from GNN_Unsupervised import experiments as run_experiment
 
 # from multiprocessing import Process
@@ -60,6 +76,23 @@ class ExperimentList(APIView):
             data = serializer.save()
             # data = Experiment.objects.get(pk="ed539a71-e25a-4dea-80f8-b78572898fd0")
 
+            params = {
+                "exp": str(data.id),
+                "methods": [data.method], # ["vgae", "dgi", "dgi-tran", "dgi-indu", "argva-base", "vgae-line", "vgae-base"], # ["vgae", "dgi", "dgi-tran", "dgi-indu", "argva-base", "vgae-line", "vgae-base"]
+                "data_variations": [data.data_variation], # ["none", "str", "dyn"]
+                "has_transformation": data.transformation,
+                "control": data.control,
+                "dimension": data.dimension,
+                "threshold_corr": data.threshold_corr,
+                "threshold_log2": data.threshold_log2,
+                "alpha": data.alpha,
+                "iterations": 1,
+                "raw_data_file": data.raw_data.file.name,
+                "obs": "",
+                "seeds": [42, 43, 44, 45, 46]
+            }
+            # print(params)
+            
             # run experiment
             """ try:
                 mp.set_start_method('fork', force=True)
@@ -71,8 +104,7 @@ class ExperimentList(APIView):
             # ctx = mp.get_context("spawn")
             
             # mp1.set_start_method('spawn', force=True)
-            t1 = mp.Process(target=run_experiment.main, args=(data,))
-            # starting threads
+            t1 = mp.Process(target=run_experiment.run, args=(params,))
             t1.start()
             # wait until all threads finish
             # t1.join()
@@ -105,14 +137,15 @@ class ExperimentDetail(APIView):
                 experiment = Experiment.objects.get(pk=pk)
                 serializer = ExperimentSerializer(experiment)
                 
-                dir_path = "{}/GNN_Unsupervised/output/{}/changes/".format(os.getcwd(), serializer.data["id"])
+                dir_path = "{}/experiments/output/{}/changes/".format(os.getcwd(), serializer.data["id"])
+                print(dir_path)
                 files = os.listdir(dir_path)
 
                 details = []
                 nodes = {}
 
                 # load data
-                df_join_raw = pd.read_csv("{}/GNN_Unsupervised/input/{}_raw.csv".format(os.getcwd(), experiment.id), index_col=0, usecols=[0, 1, 2])        
+                df_join_raw = pd.read_csv("{}/experiments/input/{}_raw.csv".format(os.getcwd(), experiment.id), index_col=0, usecols=[0, 1, 2])        
                 # df_join_raw.index = df_join_raw.index.astype("str")
                 df_join_raw.columns = ["mz", "name"]
                 # print(df_join_raw.head(10))
@@ -124,7 +157,7 @@ class ExperimentDetail(APIView):
                     aux = item.split("_")
                     name = "{}-{}".format(aux[4], aux[5])
                     print(name)
-                    dir = "{}/GNN_Unsupervised/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
+                    dir = "{}/experiments/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
                     # print(dir)
                     df_change_filter = pd.read_csv(dir) # , dtype={"source": "string", "target": "string"})
                     print(df_change_filter)
@@ -204,7 +237,7 @@ class ExperimentConsult(APIView):
 
                 experiment = Experiment.objects.get(pk=pk)
 
-                dir1 = "{}/GNN_Unsupervised/output/{}/changes/changes_edges_log2_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
+                dir1 = "{}/experiments/output/{}/changes/changes_edges_log2_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
                                                                                                     experiment.method, group.replace("-", "_"), experiment.data_variation)
                 df_change_filter = pd.read_csv(dir1, dtype={"source": "string", "target": "string",
                                                             "source1": "string", "target1": "string"})
@@ -217,7 +250,7 @@ class ExperimentConsult(APIView):
                 # Filter by significant correlations
                 # df_change_filter_all = df_change[df_change["significant"] == "*"]
                 # df_change_filter_all = df_change_filter[df_change_filter["significant"] == "*" & df_change_filter["label"].in(values_Diff) | ([df_change_filter["significant"] == "" & df_change_filter["label"].in(values_SIM)))
-                df_change_filter = df_change_filter[((df_change_filter["significant"] == "*") & (df_change_filter["label"].str[0] != df_change_filter["label"].str[1])) | 
+                df_change_filter = df_change_filter[((df_change_filter["significant"] == "*")) | 
                                                     ((df_change_filter["significant"] == "-") & (df_change_filter["label"].str[0] == df_change_filter["label"].str[1]))]
                 
                 """ key_subgraph = {
@@ -281,7 +314,7 @@ class ExperimentConsult(APIView):
                     matrix.loc[row['source'], row['target']] = row['weight1'] - row['weight2']
                     matrix.loc[row['target'], row['source']] = row['weight2'] - row['weight1'] """
 
-                dir2 = "{}/GNN_Unsupervised/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
+                dir2 = "{}/experiments/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
                                                                                         experiment.method, group, experiment.data_variation)
                 df_biocyc = pd.read_csv(dir2, delimiter="\t") # , names=["name", "mz", "id", "Before", "After", "Ratio"])
                 df_biocyc.columns = ["name", "mz", "id", "Before", "After", "Ratio"]
