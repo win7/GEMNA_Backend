@@ -54,6 +54,8 @@ values = ['PP', 'Pp', 'PN', 'Pn', 'P?', 'pP', 'pp', 'pN', 'pn', 'p?', 'NP', 'Np'
 values_Diff = ['Pp', 'PN', 'Pn', 'P?', 'pP', 'pN', 'pn', 'p?', 'NP', 'Np', 'Nn', 'N?', 'nP', 'np', 'nN', 'n?', '?P', '?p', '?N', '?n']
 values_SIM = ['PP', 'pp','NN', 'nn']
 
+exp_path = os.getcwd() + "/experiments"
+
 class ExperimentList(APIView):
     """
     List all experiments, or create a new experiment.
@@ -138,18 +140,16 @@ class ExperimentDetail(APIView):
                 experiment = Experiment.objects.get(pk=pk)
                 serializer = ExperimentSerializer(experiment)
                 
-                dir_path = "{}/experiments/output/{}/changes/".format(os.getcwd(), serializer.data["id"])
-                print(dir_path)
-                files = os.listdir(dir_path)
+                files = os.listdir("{}/output/{}/changes/".format(exp_path, serializer.data["id"]))
 
                 details = []
                 nodes = {}
 
                 # load data
-                df_join_raw = pd.read_csv("{}/experiments/input/{}_raw.csv".format(os.getcwd(), experiment.id), index_col=0, usecols=[0, 1, 2])        
+                df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0, usecols=[0, 1, 2])        
                 # df_join_raw.index = df_join_raw.index.astype("str")
                 df_join_raw.columns = ["mz", "name"]
-                # print(df_join_raw.head(10))
+                print(df_join_raw)
                 print(files)
                 
                 for item in files:
@@ -157,13 +157,13 @@ class ExperimentDetail(APIView):
                         continue
                     aux = item.split("_")
                     name = "{}-{}".format(aux[4], aux[5])
-                    print(name)
-                    dir = "{}/experiments/output/{}/changes/{}".format(os.getcwd(), serializer.data["id"], item)
-                    # print(dir)
-                    df_change_filter = pd.read_csv(dir) # , dtype={"source": "string", "target": "string"})
+                    print(item)
+                    df_change_filter = pd.read_csv("{}/output/{}/changes/{}".format(exp_path, serializer.data["id"], item)) # , dtype={"source": "string", "target": "string"})
+                    df_change_filter = df_change_filter[((df_change_filter["significant"] == "*")) | 
+                                                    ((df_change_filter["significant"] == "-") & (df_change_filter["label"].str[0] == df_change_filter["label"].str[1]))]
                     print(df_change_filter)
                     # df_change_filter = df_change_filter.iloc[:, [0, 1, 6]]
-                    graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", edge_attr=["label"], create_using=nx.DiGraph())
+                    graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", edge_attr=["label"]) #, create_using=nx.DiGraph())
                     # nodes += list(graph.nodes())
                     
                     labels = []
@@ -182,6 +182,7 @@ class ExperimentDetail(APIView):
                     details.append(aux_data)
                     
                     ids = np.unique(df_change_filter.iloc[:, [0, 1]].values.flatten())
+                    print("x", df_change_filter.iloc[:, [0, 1]])
 
                     df_nodes = df_join_raw.loc[ids] # ["Average Mz", "Metabolite name"]
                     df_nodes.insert(0, "id", df_nodes.index)
@@ -238,10 +239,12 @@ class ExperimentConsult(APIView):
 
                 experiment = Experiment.objects.get(pk=pk)
 
-                dir1 = "{}/experiments/output/{}/changes/changes_edges_log2_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
-                                                                                                    experiment.method, group.replace("-", "_"), experiment.data_variation)
-                df_change_filter = pd.read_csv(dir1, dtype={"source": "string", "target": "string",
-                                                            "source1": "string", "target1": "string"})
+                df_change_filter = pd.read_csv("{}/output/{}/changes/changes_edges_log2_{}_{}_{}.csv".format(exp_path,
+                                                                                                                experiment.pk,
+                                                                                                                experiment.method,
+                                                                                                                group.replace("-", "_"),
+                                                                                                                experiment.data_variation),
+                                                dtype={"source": "string", "target": "string", "source1": "string", "target1": "string"})
                 # df_change_filter = pd.read_csv(dir1)
             
                 print(df_change_filter)
@@ -315,12 +318,14 @@ class ExperimentConsult(APIView):
                     matrix.loc[row['source'], row['target']] = row['weight1'] - row['weight2']
                     matrix.loc[row['target'], row['source']] = row['weight2'] - row['weight1'] """
 
-                dir2 = "{}/experiments/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(os.getcwd(), experiment.pk, 
-                                                                                        experiment.method, group, experiment.data_variation)
-                df_biocyc = pd.read_csv(dir2, delimiter="\t") # , names=["name", "mz", "id", "Before", "After", "Ratio"])
+                df_biocyc = pd.read_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(exp_path,
+                                                                                            experiment.pk, 
+                                                                                            experiment.method, 
+                                                                                            group, 
+                                                                                            experiment.data_variation), delimiter="\t") # , names=["name", "mz", "id", "Before", "After", "Ratio"])
                 df_biocyc.columns = ["name", "mz", "id", "Before", "After", "Ratio"]
                 df_biocyc = df_biocyc[df_biocyc["id"].isin(list(map(int, nodes)))] # filter for part of dataframe
-                print(df_biocyc.info())
+                # print(df_biocyc.info())
                 df_biocyc.sort_values(by=["id"], inplace=True) # sort_values(by=[type], inplace=True)
                 # print(df_biocyc)
                 df_biocyc = df_biocyc.loc[:, [type, "Before", "After", "Ratio"]]
@@ -336,7 +341,7 @@ class ExperimentConsult(APIView):
                     "biocyc": df_biocyc.to_dict(orient="records"),
                     "degrees": degrees
                 }
-                # print(data["biocyc"])
+                print(data)
                 print("End...")
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
