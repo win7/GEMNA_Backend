@@ -269,7 +269,7 @@ class ExperimentConsult(APIView):
                 # print(df_change_filter.iloc[:, key_subgraph[type]])
                 # print(list(df_change_filter.iloc[:, key_subgraph[type]]))
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", # *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
-                                            edge_attr=["label"], create_using=nx.DiGraph())
+                                            edge_attr=["label"]) # , create_using=nx.DiGraph())
                 
                 # get neighbors                
                 if plot == "correlation_neighbors":
