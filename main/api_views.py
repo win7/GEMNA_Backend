@@ -89,7 +89,8 @@ class ExperimentList(APIView):
                 "iterations": 1,
                 "raw_data_file": data.raw_data.file.name,
                 "obs": "",
-                "seeds": [42, 43, 44, 45, 46]
+                "seeds": [42, 43, 44, 45, 46],
+                "from": "drf"
             }
             # print(params)
             
@@ -323,7 +324,9 @@ class ExperimentConsult(APIView):
                 df_biocyc.sort_values(by=["id"], inplace=True) # sort_values(by=[type], inplace=True)
                 # print(df_biocyc)
                 df_biocyc = df_biocyc.loc[:, [type, "Before", "After", "Ratio"]]
+                # df_biocyc = df_biocyc.round(2)
                 df_biocyc.columns = ["ID", "Before", "After", "Ratio"]
+                df_biocyc.fillna(0, inplace=True)
                 print(df_biocyc)
                 # print(df_biocyc.info())
 
