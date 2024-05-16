@@ -341,7 +341,7 @@ class ExperimentConsult(APIView):
                     "biocyc": df_biocyc.to_dict(orient="records"),
                     "degrees": degrees
                 }
-                print(data)
+                # print(data)
                 print("End...")
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
