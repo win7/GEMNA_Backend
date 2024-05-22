@@ -298,7 +298,8 @@ class ExperimentConsult(APIView):
                     HF = H.subgraph(nodes)
                     
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
-                # print(df_change_filter_sub)
+                pos = nx.spring_layout(HF)
+                nx.set_node_attributes(HF, pos, "pos")
 
                 # degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
                 # degrees = np.array([[int(node), val] for (node, val) in HF.degree()]) # H.degree (all), HF.degree (part)
@@ -337,9 +338,11 @@ class ExperimentConsult(APIView):
 
                 data = {
                     # "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
-                    "changes_sub": df_change_filter_sub.to_dict(orient="records"),
+                    "edges": df_change_filter_sub.to_dict(orient="records"),
                     "biocyc": df_biocyc.to_dict(orient="records"),
-                    "degrees": degrees
+                    "degrees": degrees,
+                    # "edges": df_change_filter_sub.to_dict(orient="records"),
+                    "nodes": [{"id": str(node), **data} for node, data in HF.nodes(data=True)]
                 }
                 # print(data)
                 print("End...")
