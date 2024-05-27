@@ -27,9 +27,6 @@ if not path in sys.path:
 if not path in sys.path:
     sys.path.append(path) """
 
-import sys
-import os
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join("", "/home/ealvarez/Project"))
 sys.path.append(os.path.join("", "/home/ealvarez/Project/GNN_Unsupervised"))
@@ -47,7 +44,6 @@ import time
 import pandas as pd
 import networkx as nx
 import numpy as np
-import os
 
 values = ['PP', 'Pp', 'PN', 'Pn', 'P?', 'pP', 'pp', 'pN', 'pn', 'p?', 'NP', 'Np', 'NN', 'Nn', 'N?', 'nP', 'np', 'nN', 'nn', 'n?', '?P', '?p', '?N', '?n']
 
@@ -230,12 +226,11 @@ class ExperimentConsult(APIView):
                 print(request.data)
 
                 pk = request.data["id"]
+                groups = request.data["groups"]
                 group = request.data["group"]
                 nodes = request.data["nodes"]
                 type = request.data["type"]
                 plot = request.data["plot"]
-                
-                groups = group.split("-")
 
                 experiment = Experiment.objects.get(pk=pk)
 
@@ -252,20 +247,9 @@ class ExperimentConsult(APIView):
                 # print(df_change_filter.iloc[:20,:])
                 
                 # Filter by significant correlations
-                # df_change_filter_all = df_change[df_change["significant"] == "*"]
-                # df_change_filter_all = df_change_filter[df_change_filter["significant"] == "*" & df_change_filter["label"].in(values_Diff) | ([df_change_filter["significant"] == "" & df_change_filter["label"].in(values_SIM)))
                 df_change_filter = df_change_filter[((df_change_filter["significant"] == "*")) | 
                                                     ((df_change_filter["significant"] == "-") & (df_change_filter["label"].str[0] == df_change_filter["label"].str[1]))]
                 
-                """ key_subgraph = {
-                    "id": [0, 1, 4],
-                    "mz": [5, 6, 4],
-                    "name": [7, 8, 4]
-                } """
-
-                # res = df_change_filter[df_change_filter.isin(nodes)]
-                # print(res)
-
                 # print(df_change_filter.iloc[:, key_subgraph[type]])
                 # print(list(df_change_filter.iloc[:, key_subgraph[type]]))
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", # *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
@@ -319,36 +303,58 @@ class ExperimentConsult(APIView):
                     matrix.loc[row['source'], row['target']] = row['weight1'] - row['weight2']
                     matrix.loc[row['target'], row['source']] = row['weight2'] - row['weight1'] """
 
-                df_biocyc = pd.read_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(exp_path,
-                                                                                            experiment.pk, 
-                                                                                            experiment.method, 
-                                                                                            group, 
-                                                                                            experiment.data_variation), delimiter="\t") # , names=["name", "mz", "id", "Before", "After", "Ratio"])
-                df_biocyc.columns = ["name", "mz", "id", "Before", "After", "Ratio"]
-                df_biocyc = df_biocyc[df_biocyc["id"].isin(list(map(int, nodes)))] # filter for part of dataframe
-                # print(df_biocyc.info())
-                df_biocyc.sort_values(by=["id"], inplace=True) # sort_values(by=[type], inplace=True)
-                # print(df_biocyc)
-                df_biocyc = df_biocyc.loc[:, [type, "Before", "After", "Ratio"]]
-                # df_biocyc = df_biocyc.round(2)
-                df_biocyc.columns = ["ID", "Before", "After", "Ratio"]
-                df_biocyc.fillna(0, inplace=True)
-                print(df_biocyc)
-                # print(df_biocyc.info())
+                # BioCyc
+                groups.remove(group)
+                groups.insert(0, group)
+                dict_biocyc = {}
+                
+                for group_ in groups:
+                    df_biocyc = pd.read_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(exp_path,
+                                                                                                experiment.pk, 
+                                                                                                experiment.method, 
+                                                                                                group_, 
+                                                                                                experiment.data_variation), delimiter="\t") # , names=["name", "mz", "id", "Before", "After", "Ratio"])
+                    df_biocyc.columns = ["name", "mz", "id", "Before", "After", "Ratio"]
+                    # df_biocyc = df_biocyc.loc[:, [type, "Before", "After", "Ratio"]]
+                    # df_biocyc = df_biocyc.round(2)
+                    # df_biocyc.columns = ["ID", "Before", "After", "Ratio"]
+                    df_biocyc.fillna(0, inplace=True)
+                    list_temp = []
+                    for k, node in enumerate(nodes):
+                        df_temp = df_biocyc[df_biocyc["id"] == int(node)]
+                        print(group_, df_temp)
+                        if len(df_temp) > 0:
+                            df_temp = df_temp.loc[:, [type, "Before", "After", "Ratio"]]
+                            df_temp.columns = ["ID", "Before", "After", "Ratio"]
+                            list_temp.append(df_temp.to_dict(orient="records")[0])
+                        else:
+                            list_temp.append({"ID": dict_biocyc[group][k]["ID"], "Before": 0, "After": 0, "Ratio": 0})
+                    dict_biocyc[group_] = list_temp
+
+                    """ df_biocyc = df_biocyc[df_biocyc["id"].isin(list(map(int, nodes)))] # filter from part of dataframe
+                    # print(df_biocyc.info())
+                    df_biocyc.sort_values(by=["id"], inplace=True) # sort_values(by=[type], inplace=True)
+                    # print(df_biocyc)
+                    df_biocyc = df_biocyc.loc[:, [type, "Before", "After", "Ratio"]]
+                    # df_biocyc = df_biocyc.round(2)
+                    df_biocyc.columns = ["ID", "Before", "After", "Ratio"]                   
+                    df_biocyc.fillna(0, inplace=True)
+                    dict_biocyc[group_] = df_biocyc.to_dict(orient="records") """
 
                 data = {
                     # "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
+                    "nodes": [{"id": str(node), **data} for node, data in HF.nodes(data=True)],
                     "edges": df_change_filter_sub.to_dict(orient="records"),
-                    "biocyc": df_biocyc.to_dict(orient="records"),
                     "degrees": degrees,
+                    "biocyc": dict_biocyc[group],
+                    "biocyc_all": dict_biocyc
                     # "edges": df_change_filter_sub.to_dict(orient="records"),
-                    "nodes": [{"id": str(node), **data} for node, data in HF.nodes(data=True)]
                 }
                 # print(data)
                 print("End...")
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
                 print(str(e))
-                return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR).send()
+                return Resp(message=str(e), flag=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR).send()
         except Experiment.DoesNotExist:
             return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
