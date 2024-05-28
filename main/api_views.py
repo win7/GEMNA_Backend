@@ -287,11 +287,11 @@ class ExperimentConsult(APIView):
 
                 # Degrees
                 new_nodes = list(HF.nodes())
+                print(new_nodes)
                 # degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
                 # degrees = np.array([[int(node), val] for (node, val) in HF.degree()]) # H.degree (all), HF.degree (part)
-                degrees = np.array(list(H.degree(new_nodes))) # before 
-                degrees = degrees[degrees[:, 0].argsort()]
-                # print(degrees)
+                degrees = np.array(list(H.degree(new_nodes))) # before
+                # degrees = degrees[degrees[:, 0].argsort()]
 
                 # edge_labels = nx.get_edge_attributes(HF, "label")
                 # print(df_change_filter.to_dict(orient="list"))
