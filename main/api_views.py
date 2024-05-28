@@ -189,7 +189,6 @@ class ExperimentDetail(APIView):
                     "details": details,
                     "nodes": nodes
                 }
-
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
                 print(str(e))
