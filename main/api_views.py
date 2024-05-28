@@ -285,9 +285,11 @@ class ExperimentConsult(APIView):
                 pos = nx.spring_layout(HF)
                 nx.set_node_attributes(HF, pos, "pos")
 
+                # Degrees
+                new_nodes = list(HF.nodes())
                 # degrees = sorted(H.degree, key=lambda x: x[1], reverse=True)
                 # degrees = np.array([[int(node), val] for (node, val) in HF.degree()]) # H.degree (all), HF.degree (part)
-                degrees = np.array(list(H.degree(nodes))) # before 
+                degrees = np.array(list(H.degree(new_nodes))) # before 
                 degrees = degrees[degrees[:, 0].argsort()]
                 # print(degrees)
 
@@ -320,9 +322,9 @@ class ExperimentConsult(APIView):
                     # df_biocyc.columns = ["ID", "Before", "After", "Ratio"]
                     df_biocyc.fillna(0, inplace=True)
                     list_temp = []
-                    for k, node in enumerate(nodes):
+                    for k, node in enumerate(new_nodes):
                         df_temp = df_biocyc[df_biocyc["id"] == int(node)]
-                        print(group_, df_temp)
+                        # print(group_, df_temp)
                         if len(df_temp) > 0:
                             df_temp = df_temp.loc[:, [type, "Before", "After", "Ratio"]]
                             df_temp.columns = ["ID", "Before", "After", "Ratio"]
@@ -346,7 +348,7 @@ class ExperimentConsult(APIView):
                     "nodes": [{"id": str(node), **data} for node, data in HF.nodes(data=True)],
                     "edges": df_change_filter_sub.to_dict(orient="records"),
                     "degrees": degrees,
-                    "biocyc": dict_biocyc[group],
+                    # "biocyc": dict_biocyc[group],
                     "biocyc_all": dict_biocyc
                     # "edges": df_change_filter_sub.to_dict(orient="records"),
                 }
