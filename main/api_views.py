@@ -321,7 +321,9 @@ class ExperimentConsult(APIView):
                                                                                                 experiment.pk, 
                                                                                                 experiment.method, 
                                                                                                 group_, 
-                                                                                                experiment.data_variation), delimiter="\t") # , names=["name", "mz", "id", "Before", "After", "Ratio"])
+                                                                                                experiment.data_variation), 
+                                                                                            delimiter="\t",
+                                                                                            dtype={"Alignment ID": "string"}) # , names=["name", "mz", "id", "Before", "After", "Ratio"])
                     df_biocyc.columns = ["name", "mz", "id", "Before", "After", "Ratio"]
                     # df_biocyc = df_biocyc.loc[:, [type, "Before", "After", "Ratio"]]
                     # df_biocyc = df_biocyc.round(2)
@@ -329,16 +331,16 @@ class ExperimentConsult(APIView):
                     df_biocyc.fillna(0, inplace=True)
                     list_temp = []
                     for k, node in enumerate(new_nodes):
-                        df_temp = df_biocyc[df_biocyc["id"] == int(node)]
+                        df_temp = df_biocyc[df_biocyc["id"] == node]
                         # print(group_, df_temp)
                         if len(df_temp) > 0:
-                            df_temp = df_temp.loc[:, [type, "Before", "After", "Ratio"]]
-                            df_temp.columns = ["ID", "Before", "After", "Ratio"]
+                            df_temp = df_temp.loc[:, ["id", "Before", "After", "Ratio"]] # [type, "Before", "After", "Ratio"]
+                            # df_temp.columns = ["ID", "Before", "After", "Ratio"]
                             list_temp.append(df_temp.to_dict(orient="records")[0])
                         else:
-                            list_temp.append({"ID": dict_biocyc[group][k]["ID"], "Before": 0, "After": 0, "Ratio": 0})
+                            # list_temp.append({"ID": dict_biocyc[group][k]["ID"], "Before": 0, "After": 0, "Ratio": 0})
+                            list_temp.append({"id": dict_biocyc[group][k]["id"], "Before": 0, "After": 0, "Ratio": 0})
                     dict_biocyc[group_] = list_temp
-
                     """ df_biocyc = df_biocyc[df_biocyc["id"].isin(list(map(int, nodes)))] # filter from part of dataframe
                     # print(df_biocyc.info())
                     df_biocyc.sort_values(by=["id"], inplace=True) # sort_values(by=[type], inplace=True)
@@ -348,7 +350,7 @@ class ExperimentConsult(APIView):
                     df_biocyc.columns = ["ID", "Before", "After", "Ratio"]                   
                     df_biocyc.fillna(0, inplace=True)
                     dict_biocyc[group_] = df_biocyc.to_dict(orient="records") """
-
+                print(dict_biocyc)
                 data = {
                     # "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
                     "nodes": [{"id": str(node), **data} for node, data in HF.nodes(data=True)],
