@@ -27,6 +27,7 @@ if not path in sys.path:
 if not path in sys.path:
     sys.path.append(path) """
 
+# Append GNN sources (Important)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join("", "/home/ealvarez/Project"))
 sys.path.append(os.path.join("", "/home/ealvarez/Project/GNN_Unsupervised"))
@@ -254,31 +255,37 @@ class ExperimentConsult(APIView):
                 H = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", # *df_change_filter.iloc[:, key_subgraph[type][:2]].columns, 
                                             edge_attr=["label"]) # , create_using=nx.DiGraph())
                 
-                # get neighbors                
-                if plot == "correlation_neighbors":
-                    # option 1: 
-                    """ aux_nodes = nodes.copy()
-                    for node in aux_nodes:
-                        nodes += list(H.neighbors(node)) """
+                if "-1" in nodes: # get all nodes
+                    nodes = list(H.nodes())
+                    # print(nodes)
                     
-                    # option 1: 
-                    list_graph = []
-                    aux_nodes = nodes.copy()
-                    for node in aux_nodes:
-                        H_ = nx.ego_graph(H, node)
-                        list_graph.append(H_)
-                        
-                    C = nx.compose_all(list_graph)
-                    
-                    # delete edges
-                    edges = list(C.edges())
-                    for edge in edges:
-                        if not edge[0] in nodes and not edge[1] in nodes:
-                            C.remove_edge(*edge)
-                    
-                    HF = C.copy() # H.subgraph(nodes) # H.subgraph(nodes) or H # graph or subgraph or C (compose graph)
-                else:
                     HF = H.subgraph(nodes)
+                else:
+                    # get neighbors                
+                    if plot == "correlation_neighbors":
+                        # option 1: 
+                        """ aux_nodes = nodes.copy()
+                        for node in aux_nodes:
+                            nodes += list(H.neighbors(node)) """
+                        
+                        # option 1: 
+                        list_graph = []
+                        aux_nodes = nodes.copy()
+                        for node in aux_nodes:
+                            H_ = nx.ego_graph(H, node)
+                            list_graph.append(H_)
+                            
+                        C = nx.compose_all(list_graph)
+                        
+                        # delete edges
+                        edges = list(C.edges())
+                        for edge in edges:
+                            if not edge[0] in nodes and not edge[1] in nodes:
+                                C.remove_edge(*edge)
+                        
+                        HF = C.copy() # H.subgraph(nodes) # H.subgraph(nodes) or H # graph or subgraph or C (compose graph)
+                    else:
+                        HF = H.subgraph(nodes)
                     
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
                 pos = nx.spring_layout(HF)
