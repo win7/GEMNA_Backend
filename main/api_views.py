@@ -350,7 +350,7 @@ class ExperimentConsult(APIView):
                     df_biocyc.columns = ["ID", "Before", "After", "Ratio"]                   
                     df_biocyc.fillna(0, inplace=True)
                     dict_biocyc[group_] = df_biocyc.to_dict(orient="records") """
-                print(dict_biocyc)
+                # print(dict_biocyc)
                 data = {
                     # "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
                     "nodes": [{"id": str(node), **data} for node, data in HF.nodes(data=True)],
