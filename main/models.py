@@ -32,7 +32,7 @@ class Experiment(models.Model):
 	data_variation = models.CharField("Dataset variation", choices=option_choice, default=option_choice[0][0], max_length=4)
 	dimension = models.IntegerField("Dimension", default=3)
 	raw_data = models.FileField("Raw data", upload_to='experiments/raw_data/', blank=False, null=False)
-	control = models.CharField("control", max_length=64)
+	controls = models.CharField("Controls", max_length=64)
 	range = models.IntegerField("Range", default=0)
 	alpha = models.FloatField("Alpha", default=0.05)
 	threshold_corr = models.FloatField("Threshold (corr)", default=0.5)

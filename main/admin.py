@@ -7,4 +7,4 @@ from main.models import *
 class ExperimentAdmin(admin.ModelAdmin):
 	"""docstring for ExperimentAdmin"""
 	list_display = ["id", "created_at", "method", "data_variation", "dimension",
-		 			"control", "transformation", "threshold_corr", "threshold_log2", "alpha", "runtime", "raw_data", "detail"]
+		 			"controls", "transformation", "threshold_corr", "threshold_log2", "alpha", "runtime", "raw_data", "detail"]

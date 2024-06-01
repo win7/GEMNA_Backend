@@ -68,8 +68,8 @@ class ExperimentList(APIView):
         return Resp(data=serializer.data, message="Experiments Successfully Recovered.").send()
 
     def post(self, request, format=None):
-        print(request.data)
-
+        print(0, request.data)
+        
         serializer = ExperimentSerializer(data=request.data)
         if serializer.is_valid():
             data = serializer.save()
@@ -80,7 +80,7 @@ class ExperimentList(APIView):
                 "methods": [data.method], # ["vgae", "dgi", "dgi-tran", "dgi-indu", "argva-base", "vgae-line", "vgae-base"], # ["vgae", "dgi", "dgi-tran", "dgi-indu", "argva-base", "vgae-line", "vgae-base"]
                 "data_variations": [data.data_variation], # ["none", "str", "dyn"]
                 "has_transformation": data.transformation,
-                "control": data.control,
+                "controls": data.controls.split(","),
                 "dimension": data.dimension,
                 "threshold_corr": data.threshold_corr,
                 "threshold_log2": data.threshold_log2,
@@ -91,7 +91,7 @@ class ExperimentList(APIView):
                 "seeds": [42, 43, 44, 45, 46],
                 "from": "drf"
             }
-            # print(params)
+            print(params)
             
             # run experiment
             """ try:
