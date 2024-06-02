@@ -3,7 +3,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from main.models import Experiment
 from main.serializers import ExperimentSerializer
 from django.http import Http404
-from django.http import JsonResponse
+# from django.http import JsonResponse
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.views import APIView
@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
-from django.core.mail import EmailMultiAlternatives
+# from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.conf import settings
 
@@ -32,7 +32,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join("", "/home/ealvarez/Project"))
 sys.path.append(os.path.join("", "/home/ealvarez/Project/GNN_Unsupervised"))
 # sys.path.append(os.path.join(BASE_DIR, "/home/ealvarez/Project/GNN_Unsupervised/utils"))
-from GNN_Unsupervised import experiments as run_experiment
+from GNN_Unsupervised import experiments_drf as run_experiment
 
 # from multiprocessing import Process
 import multiprocessing as mp
@@ -41,7 +41,6 @@ import multiprocessing as mp
 # mp.set_start_method('spawn', force=True)
 # import torch.multiprocessing as mp1
 
-import time
 import pandas as pd
 import networkx as nx
 import numpy as np
@@ -68,7 +67,7 @@ class ExperimentList(APIView):
         return Resp(data=serializer.data, message="Experiments Successfully Recovered.").send()
 
     def post(self, request, format=None):
-        print(0, request.data)
+        print(request.data)
         
         serializer = ExperimentSerializer(data=request.data)
         if serializer.is_valid():

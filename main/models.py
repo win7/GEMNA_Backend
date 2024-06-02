@@ -38,7 +38,7 @@ class Experiment(models.Model):
 	threshold_corr = models.FloatField("Threshold (corr)", default=0.5)
 	threshold_log2 = models.IntegerField("Threshold (log2)", default=0)
 	silhouette = models.FloatField("Silhouette score", default=0.0)
-	runtime = models.IntegerField("Runtime", default=0)
+	runtime = models.FloatField("Runtime", default=0.0)
 	email = models.EmailField("Email", blank=False, null=False)
 	transformation = models.BooleanField("Transformation", default=False)
 	detail = models.TextField("Details", max_length=100, blank=True, null=True)
