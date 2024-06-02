@@ -138,6 +138,7 @@ class ExperimentDetail(APIView):
                 serializer = ExperimentSerializer(experiment)
                 
                 files = os.listdir("{}/output/{}/changes/".format(exp_path, serializer.data["id"]))
+                files.sort()
 
                 details = []
                 nodes = {}
@@ -146,19 +147,26 @@ class ExperimentDetail(APIView):
                 df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0, usecols=[0, 1, 2])        
                 # df_join_raw.index = df_join_raw.index.astype("str")
                 df_join_raw.columns = ["mz", "name"]
-                print(df_join_raw)
-                print(files)
+                # print(df_join_raw)
+                # print(files)
                 
+                # get files names
+                file_names = []
                 for item in files:
                     if "significant" in item or "compose" in item or "summary" in item:
                         continue
+                    file_names.append(item)
+                file_names.sort()
+                # print(file_names)
+                    
+                for item in file_names:
                     aux = item.split("_")
                     name = "{}-{}".format(aux[4], aux[5])
-                    print(item)
+                    # print(item)
                     df_change_filter = pd.read_csv("{}/output/{}/changes/{}".format(exp_path, serializer.data["id"], item)) # , dtype={"source": "string", "target": "string"})
                     df_change_filter = df_change_filter[((df_change_filter["significant"] == "*")) | 
                                                     ((df_change_filter["significant"] == "-") & (df_change_filter["label"].str[0] == df_change_filter["label"].str[1]))]
-                    print(df_change_filter)
+                    # print(df_change_filter)
                     # df_change_filter = df_change_filter.iloc[:, [0, 1, 6]]
                     graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", edge_attr=["label"]) #, create_using=nx.DiGraph())
                     # nodes += list(graph.nodes())
@@ -179,11 +187,10 @@ class ExperimentDetail(APIView):
                     details.append(aux_data)
                     
                     ids = np.unique(df_change_filter.iloc[:, [0, 1]].values.flatten())
-                    print("x", df_change_filter.iloc[:, [0, 1]])
 
                     df_nodes = df_join_raw.loc[ids] # ["Average Mz", "Metabolite name"]
                     df_nodes.insert(0, "id", df_nodes.index)
-                    print(df_nodes)
+                    # print(df_nodes)
                     nodes[name] = df_nodes.to_dict(orient="records")
                 # nodes = np.unique(nodes)
                 data = {
