@@ -335,7 +335,7 @@ class ExperimentConsult(APIView):
                     # df_biocyc = df_biocyc.loc[:, [type, "Before", "After", "Ratio"]]
                     # df_biocyc = df_biocyc.round(2)
                     # df_biocyc.columns = ["ID", "Before", "After", "Ratio"]
-                    df_biocyc.fillna(0, inplace=True)
+                    # df_biocyc.fillna(0, inplace=True)
                     list_temp = []
                     for k, node in enumerate(new_nodes):
                         df_temp = df_biocyc[df_biocyc["id"] == node]
@@ -346,7 +346,7 @@ class ExperimentConsult(APIView):
                             list_temp.append(df_temp.to_dict(orient="records")[0])
                         else:
                             # list_temp.append({"ID": dict_biocyc[group][k]["ID"], "Before": 0, "After": 0, "Ratio": 0})
-                            list_temp.append({"id": dict_biocyc[group][k]["id"], "Before": 0, "After": 0, "Ratio": 0})
+                            list_temp.append({"id": dict_biocyc[group][k]["id"], "Before": "-", "After": "-", "Ratio": "-"})
                     dict_biocyc[group_] = list_temp
                     """ df_biocyc = df_biocyc[df_biocyc["id"].isin(list(map(int, nodes)))] # filter from part of dataframe
                     # print(df_biocyc.info())
