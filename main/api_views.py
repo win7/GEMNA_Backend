@@ -165,9 +165,11 @@ class ExperimentDetail(APIView):
                 nodes = {}
 
                 # load data
-                df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0) #, usecols=[0, 1, 2])        
+                df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0) #, usecols=[0, 1, 2])
+                # df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0, usecols=[0, 1, 2])
                 # df_join_raw.index = df_join_raw.index.astype("str")
                 # df_join_raw.columns = ["mz", "name"]
+                df_join_raw.rename(columns={"Average Mz": "mz", "Metabolite name": "name"}, inplace=True)
                 # print(df_join_raw)
                 # print(files)
                 
@@ -182,7 +184,7 @@ class ExperimentDetail(APIView):
                     
                 for item in file_names:
                     aux = item.split("_")
-                    name = "{}-{}".format(aux[4], aux[5])
+                    name = "{}-{}".format(aux[5], aux[6]) # important
                     # print(item)
                     df_change_filter = pd.read_csv("{}/output/{}/changes/{}".format(exp_path, serializer.data["id"], item)) # , dtype={"source": "string", "target": "string"})
                     df_change_filter = df_change_filter[((df_change_filter["significant"] == "*")) | 
@@ -218,7 +220,7 @@ class ExperimentDetail(APIView):
                 # clustering
                 # print(serializer.data)
                 exp = serializer.data["id"]
-                method = "vgae-line"
+                method =serializer.data["method"]
                 group_id = serializer.data["controls"].split(",")[0]
                 data_variation =  serializer.data["data_variation"]
                 iteration = 1
@@ -232,8 +234,8 @@ class ExperimentDetail(APIView):
                                                                                                                             group_id,
                                                                                                                             data_variation))
                 
-                nodes = np.unique(df_edges_filter_weight_filter.iloc[:, [0, 1]].values.flatten())
-                df_join_raw_filter = df_join_raw.loc[nodes]
+                nodes_ = np.unique(df_edges_filter_weight_filter.iloc[:, [0, 1]].values.flatten())
+                df_join_raw_filter = df_join_raw.loc[nodes_]
                 # print(df_join_raw_filter)
                 
                 X = df_join_raw_filter.iloc[:, 2:]
@@ -300,11 +302,13 @@ class ExperimentConsult(APIView):
                 nodes = request.data["nodes"]
                 type = request.data["type"]
                 plot = request.data["plot"]
+                f = request.data["quality"]
 
                 experiment = Experiment.objects.get(pk=pk)
 
-                df_change_filter = pd.read_csv("{}/output/{}/changes/changes_edges_log2_{}_{}_{}.csv".format(exp_path,
+                df_change_filter = pd.read_csv("{}/output/{}/changes/changes_edges_log2_{}_{}_{}_{}.csv".format(exp_path,
                                                                                                                 experiment.pk,
+                                                                                                                f,
                                                                                                                 experiment.method,
                                                                                                                 group.replace("-", "_"),
                                                                                                                 experiment.data_variation),
@@ -386,8 +390,9 @@ class ExperimentConsult(APIView):
                 dict_biocyc = {}
                 
                 for group_ in groups:
-                    df_biocyc = pd.read_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}.csv".format(exp_path,
-                                                                                                experiment.pk, 
+                    df_biocyc = pd.read_csv("{}/output/{}/biocyc/biocyc_{}_{}_{}_{}.csv".format(exp_path,
+                                                                                                experiment.pk,
+                                                                                                f,
                                                                                                 experiment.method, 
                                                                                                 group_, 
                                                                                                 experiment.data_variation), 
