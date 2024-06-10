@@ -41,6 +41,7 @@ import multiprocessing as mp
 # mp.set_start_method('spawn', force=True)
 # import torch.multiprocessing as mp1
 
+from sklearn.decomposition import PCA
 import pandas as pd
 import networkx as nx
 import numpy as np
@@ -51,6 +52,15 @@ values_Diff = ['Pp', 'PN', 'Pn', 'P?', 'pP', 'pN', 'pn', 'p?', 'NP', 'Np', 'Nn',
 values_SIM = ['PP', 'pp','NN', 'nn']
 
 exp_path = os.getcwd() + "/experiments"
+
+def log10_global(df_join_raw):
+    df_join_raw_log = df_join_raw.copy()
+    for column in df_join_raw.columns:
+        # df_join_raw_log[column] = np.log10(df_join_raw[column], where=df_join_raw[column]>0)
+        df_join_raw_log[column] = np.log10(df_join_raw_log[column])
+        df_join_raw_log[column] = df_join_raw_log[column].replace(-np.Inf, np.nan)
+        df_join_raw_log[column] = df_join_raw_log[column].replace(np.nan, df_join_raw_log[column].min() / 100)
+    return df_join_raw_log
 
 class ExperimentList(APIView):
     """
@@ -86,9 +96,18 @@ class ExperimentList(APIView):
                 "alpha": data.alpha,
                 "iterations": 1,
                 "raw_data_file": data.raw_data.file.name,
+                "groups_id_no": ["Blank", "QC", "Std"],
                 "obs": "",
                 "seeds": [42, 43, 44, 45, 46],
-                "from": "drf"
+                
+                "from": "drf",
+                "cuda": 0,
+                "epochs": 100,
+                "lr": 0.01,
+                "weight_decay": 1e-4,
+                "patience": 10,
+                "contamination": 0.1, # float in (0., 0.5)
+                "n_jobs": 1, # -1 all
             }
             print(params)
             
@@ -133,6 +152,9 @@ class ExperimentDetail(APIView):
     def get(self, request, pk, format=None):
         try:
             try:
+                print(request.GET)
+                f = request.GET["quality"]
+                
                 experiment = Experiment.objects.get(pk=pk)
                 serializer = ExperimentSerializer(experiment)
                 
@@ -143,16 +165,16 @@ class ExperimentDetail(APIView):
                 nodes = {}
 
                 # load data
-                df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0, usecols=[0, 1, 2])        
+                df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0) #, usecols=[0, 1, 2])        
                 # df_join_raw.index = df_join_raw.index.astype("str")
-                df_join_raw.columns = ["mz", "name"]
+                # df_join_raw.columns = ["mz", "name"]
                 # print(df_join_raw)
                 # print(files)
                 
                 # get files names
                 file_names = []
                 for item in files:
-                    if "significant" in item or "compose" in item or "summary" in item:
+                    if "significant" in item or "compose" in item or "summary" in item or f not in item:
                         continue
                     file_names.append(item)
                 file_names.sort()
@@ -192,9 +214,50 @@ class ExperimentDetail(APIView):
                     # print(df_nodes)
                     nodes[name] = df_nodes.to_dict(orient="records")
                 # nodes = np.unique(nodes)
+                
+                # clustering
+                # print(serializer.data)
+                exp = serializer.data["id"]
+                method = "vgae-line"
+                group_id = serializer.data["controls"].split(",")[0]
+                data_variation =  serializer.data["data_variation"]
+                iteration = 1
+                # f = "f1"
+                print(exp, method, group_id, data_variation)
+                
+                df_edges_filter_weight_filter = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}_{}.csv".format(exp_path,
+                                                                                                                            exp,
+                                                                                                                            f,
+                                                                                                                            method,
+                                                                                                                            group_id,
+                                                                                                                            data_variation))
+                
+                nodes = np.unique(df_edges_filter_weight_filter.iloc[:, [0, 1]].values.flatten())
+                df_join_raw_filter = df_join_raw.loc[nodes]
+                # print(df_join_raw_filter)
+                
+                X = df_join_raw_filter.iloc[:, 2:]
+                X = log10_global(X)
+                X = X.T
+
+                # colors = ["", "white", "green", "black", "yellow", "red", "orange"]
+
+                classes = [x.split("_")[0] for x in X.index]
+                # print(len(classes), classes)
+
+                pca = PCA()
+                pca.fit(X)
+                X = pca.transform(X)
+
+                df_cluster = pd.DataFrame(X)
+                df_cluster["Class"] = classes
+                df_cluster = df_cluster.iloc[:, [0, 1, -1]]
+                # print(df_cluster)
+
                 data = {
                     "details": details,
-                    "nodes": nodes
+                    "nodes": nodes,
+                    "cluster": df_cluster.values
                 }
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
@@ -357,6 +420,7 @@ class ExperimentConsult(APIView):
                     df_biocyc.fillna(0, inplace=True)
                     dict_biocyc[group_] = df_biocyc.to_dict(orient="records") """
                 # print(dict_biocyc)
+
                 data = {
                     # "changes": matrix.to_dict(orient="list"), # df_change_filter.to_dict(orient="records"),
                     "nodes": [{"id": str(node), **data} for node, data in HF.nodes(data=True)],
