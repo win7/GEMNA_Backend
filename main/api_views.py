@@ -101,12 +101,12 @@ class ExperimentList(APIView):
                 "seeds": [42, 43, 44, 45, 46],
                 
                 "from": "drf",
-                "cuda": 0,
+                "cuda": 1,
                 "epochs": 100,
                 "lr": 0.01,
                 "weight_decay": 1e-4,
                 "patience": 10,
-                "contamination": 0.1, # float in (0., 0.5)
+                "contamination": 0.05, # float in (0., 0.5)
                 "n_jobs": 1, # -1 all
             }
             print(params)
@@ -214,7 +214,7 @@ class ExperimentDetail(APIView):
                     df_nodes = df_join_raw.loc[ids] # ["Average Mz", "Metabolite name"]
                     df_nodes.insert(0, "id", df_nodes.index)
                     # print(df_nodes)
-                    nodes[name] = df_nodes.to_dict(orient="records")
+                    nodes[name] = df_nodes.iloc[:, :3].to_dict(orient="records")
                 # nodes = np.unique(nodes)
                 
                 # clustering
@@ -259,7 +259,7 @@ class ExperimentDetail(APIView):
                 data = {
                     "details": details,
                     "nodes": nodes,
-                    "cluster": df_cluster.values
+                    # "cluster": df_cluster.values
                 }
                 return Resp(data=data, message="Experiment Successfully Recovered.").send()
             except Exception as e:
@@ -441,5 +441,142 @@ class ExperimentConsult(APIView):
             except Exception as e:
                 print(str(e))
                 return Resp(message=str(e), flag=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR).send()
+        except Experiment.DoesNotExist:
+            return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
+
+class ExperimentFinetune(APIView):
+    """
+    Retrieve, update or delete a experiment instance.
+    """
+
+    # permission_classes = (IsAuthenticated,)
+	# serializer_class = ExperimentSerializer
+
+    def get_object(self, pk):
+        try:
+            experiment = Experiment.objects.get(pk=pk)
+            return experiment
+        except Experiment.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        return Resp(message="", status=status.HTTP_501_NOT_IMPLEMENTED).send()
+        
+    def post(self, request, format=None):
+        try:
+            try:
+                print(request.GET)
+                f = request.GET["quality"]
+                
+                experiment = Experiment.objects.get(pk=pk)
+                serializer = ExperimentSerializer(experiment)
+                
+                files = os.listdir("{}/output/{}/changes/".format(exp_path, serializer.data["id"]))
+                files.sort()
+
+                details = []
+                nodes = {}
+
+                # load data
+                df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0) #, usecols=[0, 1, 2])
+                # df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0, usecols=[0, 1, 2])
+                # df_join_raw.index = df_join_raw.index.astype("str")
+                # df_join_raw.columns = ["mz", "name"]
+                df_join_raw.rename(columns={"Average Mz": "mz", "Metabolite name": "name"}, inplace=True)
+                # print(df_join_raw)
+                # print(files)
+                
+                # get files names
+                file_names = []
+                for item in files:
+                    if "significant" in item or "compose" in item or "summary" in item or f not in item:
+                        continue
+                    file_names.append(item)
+                file_names.sort()
+                # print(file_names)
+                    
+                for item in file_names:
+                    aux = item.split("_")
+                    name = "{}-{}".format(aux[5], aux[6]) # important
+                    # print(item)
+                    df_change_filter = pd.read_csv("{}/output/{}/changes/{}".format(exp_path, serializer.data["id"], item)) # , dtype={"source": "string", "target": "string"})
+                    df_change_filter = df_change_filter[((df_change_filter["significant"] == "*")) | 
+                                                    ((df_change_filter["significant"] == "-") & (df_change_filter["label"].str[0] == df_change_filter["label"].str[1]))]
+                    # print(df_change_filter)
+                    # df_change_filter = df_change_filter.iloc[:, [0, 1, 6]]
+                    graph = nx.from_pandas_edgelist(df_change_filter.iloc[:, [0, 1, 6]], "source", "target", edge_attr=["label"]) #, create_using=nx.DiGraph())
+                    # nodes += list(graph.nodes())
+                    
+                    labels = []
+                    for label in values:
+                        labels.append({
+                            # "label": label,
+                            "count": len(df_change_filter[df_change_filter.label == label])
+                        })
+                    aux_data = {
+                        "name": name,
+                        "nodes": graph.number_of_nodes(),
+                        "edges": graph.number_of_edges(),
+                        "density": round(nx.density(graph), 4),
+                        "labels": labels
+                    }
+                    details.append(aux_data)
+                    
+                    ids = np.unique(df_change_filter.iloc[:, [0, 1]].values.flatten())
+
+                    df_nodes = df_join_raw.loc[ids] # ["Average Mz", "Metabolite name"]
+                    df_nodes.insert(0, "id", df_nodes.index)
+                    # print(df_nodes)
+                    nodes[name] = df_nodes.iloc[:, :3].to_dict(orient="records")
+                # nodes = np.unique(nodes)
+                
+                # clustering
+                # print(serializer.data)
+                exp = serializer.data["id"]
+                method =serializer.data["method"]
+                group_id = serializer.data["controls"].split(",")[0]
+                data_variation =  serializer.data["data_variation"]
+                iteration = 1
+                # f = "f1"
+                print(exp, method, group_id, data_variation)
+                
+                df_edges_filter_weight_filter = pd.read_csv("{}/output/{}/common_edges/common_edges_{}_{}_{}_{}.csv".format(exp_path,
+                                                                                                                            exp,
+                                                                                                                            f,
+                                                                                                                            method,
+                                                                                                                            group_id,
+                                                                                                                            data_variation))
+                
+                nodes_ = np.unique(df_edges_filter_weight_filter.iloc[:, [0, 1]].values.flatten())
+                df_join_raw_filter = df_join_raw.loc[nodes_]
+                # print(df_join_raw_filter)
+                
+                X = df_join_raw_filter.iloc[:, 2:]
+                X = log10_global(X)
+                X = X.T
+
+                # colors = ["", "white", "green", "black", "yellow", "red", "orange"]
+
+                classes = [x.split("_")[0] for x in X.index]
+                # print(len(classes), classes)
+
+                pca = PCA()
+                pca.fit(X)
+                X = pca.transform(X)
+
+                df_cluster = pd.DataFrame(X)
+                df_cluster["Class"] = classes
+                df_cluster = df_cluster.iloc[:, [0, 1, -1]]
+                # print(df_cluster)
+
+                data = {
+                    "details": details,
+                    "nodes": nodes,
+                    # "cluster": df_cluster.values
+                }
+                return Resp(data=data, message="Experiment Successfully Recovered.").send()
+            except Exception as e:
+                print(str(e))
+                return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR).send()
         except Experiment.DoesNotExist:
             return Resp(message="Experiment Does Not Exist.", flag=False, status=status.HTTP_404_NOT_FOUND).send()
