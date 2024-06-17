@@ -101,7 +101,7 @@ class ExperimentList(APIView):
                 "seeds": [42, 43, 44, 45, 46],
                 
                 "from": "drf",
-                "cuda": 1,
+                "cuda": 0,
                 "epochs": 100,
                 "lr": 0.01,
                 "weight_decay": 1e-4,
@@ -169,18 +169,17 @@ class ExperimentDetail(APIView):
                 # df_join_raw = pd.read_csv("{}/input/{}_raw.csv".format(exp_path, experiment.id), index_col=0, usecols=[0, 1, 2])
                 # df_join_raw.index = df_join_raw.index.astype("str")
                 # df_join_raw.columns = ["mz", "name"]
-                df_join_raw.rename(columns={"Average Mz": "mz", "Metabolite name": "name"}, inplace=True)
+                df_join_raw.rename(columns={"Average Rt": "rt", "Average Mz": "mz", "Metabolite name": "name"}, inplace=True)
                 # print(df_join_raw)
                 # print(files)
                 
                 # get files names
                 file_names = []
                 for item in files:
-                    if "significant" in item or "compose" in item or "summary" in item or f not in item:
-                        continue
-                    file_names.append(item)
+                    if "log2_{}".format(f) in item:
+                        file_names.append(item)
                 file_names.sort()
-                # print(file_names)
+                print(file_names)
                     
                 for item in file_names:
                     aux = item.split("_")
@@ -214,7 +213,7 @@ class ExperimentDetail(APIView):
                     df_nodes = df_join_raw.loc[ids] # ["Average Mz", "Metabolite name"]
                     df_nodes.insert(0, "id", df_nodes.index)
                     # print(df_nodes)
-                    nodes[name] = df_nodes.iloc[:, :3].to_dict(orient="records")
+                    nodes[name] = df_nodes.iloc[:, :4].to_dict(orient="records")
                 # nodes = np.unique(nodes)
                 
                 # clustering
@@ -238,7 +237,7 @@ class ExperimentDetail(APIView):
                 df_join_raw_filter = df_join_raw.loc[nodes_]
                 # print(df_join_raw_filter)
                 
-                X = df_join_raw_filter.iloc[:, 2:]
+                X = df_join_raw_filter.iloc[:, 3:]
                 X = log10_global(X)
                 X = X.T
 
@@ -527,7 +526,7 @@ class ExperimentFinetune(APIView):
                     df_nodes = df_join_raw.loc[ids] # ["Average Mz", "Metabolite name"]
                     df_nodes.insert(0, "id", df_nodes.index)
                     # print(df_nodes)
-                    nodes[name] = df_nodes.iloc[:, :3].to_dict(orient="records")
+                    nodes[name] = df_nodes.iloc[:, :4].to_dict(orient="records")
                 # nodes = np.unique(nodes)
                 
                 # clustering
@@ -551,7 +550,7 @@ class ExperimentFinetune(APIView):
                 df_join_raw_filter = df_join_raw.loc[nodes_]
                 # print(df_join_raw_filter)
                 
-                X = df_join_raw_filter.iloc[:, 2:]
+                X = df_join_raw_filter.iloc[:, 3:]
                 X = log10_global(X)
                 X = X.T
 
