@@ -360,7 +360,7 @@ class ExperimentConsult(APIView):
                         HF = H.subgraph(nodes)
                     
                 df_change_filter_sub = nx.to_pandas_edgelist(HF)
-                pos = nx.spring_layout(HF)
+                pos = nx.spring_layout(HF, seed=42)
                 nx.set_node_attributes(HF, pos, "pos")
 
                 # Degrees
