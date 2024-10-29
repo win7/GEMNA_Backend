@@ -16,7 +16,6 @@ $ ~/miniconda3/bin/conda init zsh
 $ conda env export > environment_cu118.yml # cuda 11.8
 or
 $ conda env export > environment_cu121.yml # cuda 12.1
-
 ```
 
 ## Quick Setup
