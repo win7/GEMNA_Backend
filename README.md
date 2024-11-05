@@ -111,3 +111,6 @@ Login
 
 Administration
 ![Alt text](/setup_img/admin_drf.png)
+
+# User guide
+We include an user guide to use the GEMNA web applicaction.
