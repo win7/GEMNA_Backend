@@ -57,7 +57,7 @@ output:
 
 ``` bash
 # create environment
-$ conda env export > environment_cu121.yml # cuda 12.1
+$ conda env create -f environment_cu121.yml # cuda 12.1
 ```
 output:
 
