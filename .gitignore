@@ -3,3 +3,4 @@
 /GNN_Unsupervised/temp/*
 /GNN_Unsupervised/raw_data/*
 *.pyc
+experiments/*
