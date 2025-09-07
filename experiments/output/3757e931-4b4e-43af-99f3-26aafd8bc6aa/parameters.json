@@ -1,0 +1,62 @@
+{
+    "exp": "3757e931-4b4e-43af-99f3-26aafd8bc6aa",
+    "methods": [
+        "vgae-line"
+    ],
+    "data_variations": [
+        "dyn"
+    ],
+    "has_transformation": false,
+    "controls": [
+        "control"
+    ],
+    "dimension": 3,
+    "threshold_corr": 0.3,
+    "threshold_log2": 0,
+    "alpha": 0.05,
+    "iterations": 1,
+    "raw_data_file": "/home/ealvarez/Project/MetaNet_DRF/experiments/raw_data/hojas_new_format_he3iC01.csv",
+    "groups_id": [
+        "control",
+        "treatment"
+    ],
+    "subgroups_id": {
+        "control": [
+            "1",
+            "2",
+            "3"
+        ],
+        "treatment": [
+            "1",
+            "2",
+            "3"
+        ]
+    },
+    "groups": [
+        [
+            "control",
+            "treatment"
+        ]
+    ],
+    "groups_id_no": [
+        "Blank",
+        "QC",
+        "Std"
+    ],
+    "from": "drf",
+    "cuda": 0,
+    "epochs": 100,
+    "lr": 0.01,
+    "weight_decay": 0.0001,
+    "patience": 10,
+    "contamination": 0.05,
+    "n_jobs": 1,
+    "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46
+    ],
+    "obs": ""
+}
